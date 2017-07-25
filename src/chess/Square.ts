@@ -7,19 +7,19 @@ import { Direction } from './Direction';
 const ns: number = 65;
 
 /**
- * Имена столбцов клеток
+ * Fyle's names
  */
 const hqs: string[] = ["a", "b", "c", "d", "e", "f", "g", "h"];
 
 /**
- * Перевод числовой нотации ячейки в буквенно числовую
+ * Conver square number to name
  */
 function notation_Pos2Note(pos: number): string {
     return hqs[pos % 8] + Math.ceil((pos + 1) / 8).toString();
 }
 
 /**
- * Последняя клетка доска для перемещений.
+ * Last square for moves.
  */
 const __squareLast: number[][] = [
     [ns, 56, 0, ns, 0, 0, 0, ns, 7, 63, 0],
@@ -90,7 +90,7 @@ const __squareLast: number[][] = [
     [ns, ns, ns, ns, ns, ns, ns, ns, ns, ns, ns]];
 
 /**
- * Ходы конем
+ * Knight moves
  */
 const __knightAttacks: number[][] = [
     [10, 17, ns, ns, ns, ns, ns, ns, ns],
@@ -161,7 +161,7 @@ const __knightAttacks: number[][] = [
     [ns, ns, ns, ns, ns, ns, ns, ns, ns]];
 
 /**
- * Ходы королем
+ * King moves
  */
 const __kingAttacks: number[][] = [
     [1, 8, 9, ns, ns, ns, ns, ns, ns],
@@ -246,7 +246,7 @@ const squareLast = (sq: number, dir: number) => {
 };
 
 /**
- * Клетки доски.
+ * Chess board squares.
  * A1 = 0, B1 = 1, C1 = 2, ... G8 =62, H8 =63, 
  * COLOR_SQUARE = 64, NULL_SQUARE = 65
  */
@@ -337,7 +337,7 @@ export class Square {
     }
 
     /**
-     * Получить направление движения для двух клеток.
+     * Get direction for move from square @fr to square @to.
      */
     public static direction(fr: number, to: number): number {
         return Direction.squareDirection(fr, to);

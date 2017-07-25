@@ -247,8 +247,6 @@ export class Chess {
         return this.startFen !== FenStandartStart;
     }
 
-    // public get 
-
     private clear() {
         this.GameId = 0;
 

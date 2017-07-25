@@ -5,7 +5,7 @@ import { Square } from './Square';
 import { SimpleMove } from './SimpleMove';
 
 /**
- * Ход в позиции
+ * Move in position
  */
 export class Move {
     private vars: Move[] = [];
@@ -139,7 +139,7 @@ export class Move {
     }
 
     /**
-     * Добавить вариант и войти в него
+     * Add and enter variation
      */
     public addVariation(): Move {
         let varRoot: Move = null;
@@ -153,7 +153,7 @@ export class Move {
     }
 
     /**
-     * Войти в вариант
+     * Enter variation
      */
     public moveIntoVariation(no: number): Move {
         let varRoot: Move = null;
@@ -165,7 +165,7 @@ export class Move {
     }
 
     /**
-     * Выйти из варианта
+     * Exit variation
      */
     public exitVariation() {
         if (this.parent) {

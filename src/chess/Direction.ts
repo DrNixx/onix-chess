@@ -200,7 +200,7 @@ function initializeDirections(): void {
     }
 }
 
-// вызов инициализации матрицы перемещений.
+// Call initialization script.
 (function () {
     initializeDirections();
 })();

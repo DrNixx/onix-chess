@@ -45,7 +45,7 @@ export const FenStandartStart = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w K
 export const FenEmptyBoard = "8/8/8/8/8/8/8/8 w KQkq - 0 1";
 const fenEmptyBoardRaw = "1111111111111111111111111111111111111111111111111111111111111111 w KQkq - 0 1";
 
-// Таблица преобразований символов в фигуры
+// Forsite to piece map
 const fen2Piece: Hashtable<number> = {
     "1": noPiece,
     "P": Piece.WPawn,
@@ -62,7 +62,7 @@ const fen2Piece: Hashtable<number> = {
     "b": Piece.BBishop
 };
 
-// Таблица преобразований фигур в символы
+// Piece to Forsite map
 const FP_p2f: string[] = [];
 FP_p2f[noPiece] = "1";
 FP_p2f[Piece.WPawn] = "P";
@@ -175,8 +175,8 @@ export class Position {
     }
 
     /**
-     * Копировать позицию
-     * @param source {ChessPosition}
+     * Copy position
+     * @param source {Position}
      */
     public copyFrom(source: Position) {
         this.board = safeClone(source.board);
@@ -199,7 +199,7 @@ export class Position {
     }
 
     /**
-     * Создать копию текущего объекта
+     * Clone position object
      * @returns {ChessPosition}
      */
     public clone() {
@@ -217,7 +217,7 @@ export class Position {
     }
 
     /**
-     * Возвращает доску в виде массива байтов
+     * Byte board
      */
     public get Board(): number[] {
         return this.board;
@@ -228,7 +228,7 @@ export class Position {
     }
 
     /**
-     * Возвращает фигуру на указанной клетке
+     * Get piece on square
      */
     getPiece = (sq: number): number => {
         return this.board[sq];
@@ -242,21 +242,21 @@ export class Position {
     }
 
     /**
-     * Возвращает true если число указанных фигур больше нуля.
+     * Return true if count of specified piece great than zero.
      */
     public hasPiece(p: number) {
         return this.material[p] > 0;
     }
 
     /**
-     * Возвращает число указанных фигур
+     * Return count of specified piece.
      */
     public getPieceCount(p: number) {
         return this.material[p];
     }
 
     /**
-     * Добавить фигуру в позицию
+     * Add piece to square
      * @param p 
      * @param sq
      * @returns {Boolean}
@@ -291,13 +291,13 @@ export class Position {
     }
 
     /**
-     * Убрать фигуру из позиции
+     * Remove piece from square
      * @param p
      * @param sq
      * @returns {Boolean}
      */
     public removePiece(p: number, sq: number): boolean {
-        // !!!: проверить метод
+        // TODO: check method
         var c = Piece.color(p);
         if (this.pieceCount[c] === 0) { return false; }
         if (this.material[p] === 0) { return false; }
@@ -318,7 +318,7 @@ export class Position {
     }
 
     /**
-     * Возвращает возможность сортировки.
+     * Return castling is enabled.
      */
     public getCastling(c: number, dir: Castle): boolean {
         /* tslint:disable:no-bitwise */
@@ -336,7 +336,7 @@ export class Position {
     }
 
     /**
-     * Устанавливает возможность сортировки.
+     * Set castling flag.
      */
     public setCastling(c: number, dir: Castle, flag: boolean): void {
         /* tslint:disable:no-bitwise */
@@ -354,21 +354,21 @@ export class Position {
     }
 
     /**
-     * Возвращает номер текущего полухода
+     * Return current halfmove humber
      */
     public get PlyCount(): number {
         return this.plyCount;
     }
 
     /**
-     * Получает номер хода
+     * Get move number
      */
     public getMoveNo(): number {
         return ((this.plyCount + 2) >> 1);
     }
 
     /**
-     * Устанавливает номер хода
+     * Set move number
      */
     public setMoveNo(no: number): void {
         this.plyCount = (no - 1) * 2;
@@ -378,7 +378,7 @@ export class Position {
     }
 
     /**
-     * Установить позицию из FEN
+     * Set position from fen
      * @param fen {String}
      */
     public readFromFEN(fen?: string): void {
@@ -504,7 +504,7 @@ export class Position {
     }
 
     /**
-     * Получает строку FEN для позиции
+     * Write FEN for position
      */
     public writeFEN(): string {
         var str = "";
