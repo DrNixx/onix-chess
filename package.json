@@ -1,6 +1,6 @@
 {
   "name": "onix-chess",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Onix chess library",
   "main": "built/index.js",
   "types": "built/index.d.ts",
@@ -21,7 +21,7 @@
   "author": "Nick Panteleeff",
   "license": "MIT",
   "dependencies": {
-    "onix-core": "^1.1.16",
+    "onix-core": "^1.1.19",
     "shortid": "^2.2.6"
   },
   "devDependencies": {
