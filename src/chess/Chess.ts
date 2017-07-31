@@ -576,4 +576,18 @@ export class Chess {
     public moveLast() {
         this.moveToPly(9999);
     }
+
+    public getResultName(mode: 'char' | 'short' | 'long' | 'html'): string {
+        if (mode === "char") {
+            return resultChar[this.Result];
+        } else if (mode === "short") {
+            return resultShortString[this.Result];
+        } else if (mode === "long") {
+            return resultLongStr[this.Result];
+        } else if (mode === "html") {
+            return resultHtmlStr[this.Result];
+        }
+
+        return "?";
+    }
 }
