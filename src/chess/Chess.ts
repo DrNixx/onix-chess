@@ -263,8 +263,8 @@ export class Chess {
     /// Clears all of the standard tags.
     /// </summary>
     private clearStandardTags () {
-        this.White = { id: 0, name: "?"};
-        this.Black = { id: 0, name: "?"};
+        this.White = { userId: 0, name: "?"};
+        this.Black = { userId: 0, name: "?"};
         this.Event = "?";
         this.Site = "?";
         this.Round = "?";

@@ -5,7 +5,7 @@ export class Intl {
 
     public static register() {
         if (!Intl.intlInitialized) {
-            IntlCore.register()
+            IntlCore.register();
 
             IntlCore.registerStrings('chess', {
                 'ru-ru': {
