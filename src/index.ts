@@ -1,4 +1,4 @@
-export { Intl as IntlChess } from './Intl';
+export { Intl } from './Intl';
 export { Color } from './chess/Color';
 export { Castle } from './chess/Castle';
 export { Piece } from './chess/Piece';
