@@ -6,4 +6,5 @@ export { Square } from './chess/Square';
 export { Move } from './chess/Move';
 export { SimpleMove } from './chess/SimpleMove';
 export { Position, FenStandartStart, FenEmptyBoard } from './chess/Position';
+export { IOpeningPosition } from './chess/IOpeningPosition';
 export { Chess } from './chess/Chess';
