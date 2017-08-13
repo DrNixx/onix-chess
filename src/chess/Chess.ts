@@ -590,4 +590,19 @@ export class Chess {
 
         return "?";
     }
+
+    public static plyToTurn(ply: number, startPly?: number) {
+        startPly = startPly || 0;
+        return intVal(1 + ((ply + startPly) - 1) / 2);
+    }
+
+    public static plyToColor(ply: number, startPly?: number) {
+        startPly = startPly || 0;
+        return (((ply + startPly) % 2) == 1) ? Color.White : Color.Black;
+    }
+
+    public static turnToPly(turn: number, color?: number) {
+        color = color || Color.White;
+        let ply = (((turn - 1) * 2) + color + 1);
+    }
 }

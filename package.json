@@ -1,6 +1,6 @@
 {
   "name": "onix-chess",
-  "version": "1.0.12",
+  "version": "1.0.13",
   "description": "Onix chess library",
   "main": "built/index.js",
   "types": "built/index.d.ts",
