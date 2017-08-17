@@ -1,6 +1,8 @@
-import { Hashtable } from 'onix-core/built/Hashtable';
-import { inArray } from 'onix-core/built/fn/array/InArray';
-import { intVal } from 'onix-core/built/fn/number/IntVal';
+import toSafeInteger = require('lodash/toSafeInteger');
+import isInteger = require('lodash/isInteger');
+import isNumber = require('lodash/isNumber');
+import indexOf = require('lodash/indexOf');
+import { Hashtable } from 'onix-core';
 import { Color } from './Color';
 import { Piece } from './Piece';
 import { Square } from './Square';
@@ -20,11 +22,11 @@ export enum ChessRatingType {
 const ChessRatingNames: string[] = ["Unknown", "Elo", "Rating", "Rapid", "ICCF"];
 
 function chessRatingParseType(value: string | number): ChessRatingType {
-    return (typeof value === "string") ? intVal(value) : value;
+    return (isNumber(value)) ? value : toSafeInteger(value);
 }
 
 function chessRatingParseValue(value: string | number): number {
-    return (typeof value === "string") ? intVal(value) : value;
+    return (isNumber(value)) ? value : toSafeInteger(value);
 }
 
 const stdTags: string[] = [
@@ -70,8 +72,8 @@ export class ChessTags {
     public add(name: string, value: any) {
         if (name) {
             name = name.toLowerCase();
-            if (!inArray(name, stdTags)) {
-                if (inArray(name, addTags)) {
+            if (indexOf(stdTags, name) === -1) {
+                if (indexOf(addTags, name) !== -1) {
                     switch (name) {
                         case "whiteratingtype":
                             this.owner.WhiteRatingType = chessRatingParseType(value);
@@ -86,7 +88,7 @@ export class ChessTags {
                             this.owner.BlackElo = chessRatingParseValue(value);
                             break;
                         case "ecocode":
-                            this.owner.EcoCode = intVal(value);
+                            this.owner.EcoCode = value;
                             break;
                         case "fen":
                             this.owner.StartFen = value;
@@ -204,7 +206,7 @@ export class Chess {
     public WhiteRatingType: ChessRatingType;
     public BlackElo: number;
     public BlackRatingType: ChessRatingType;
-    public EcoCode: number;
+    public EcoCode: string;
     public Result: ChessResultColor;
 
     /**
@@ -270,7 +272,7 @@ export class Chess {
         this.Round = "?";
         this.GameDate = "????.??.??";
         this.EventDate = "????.??.??";
-        this.EcoCode = 0;
+        this.EcoCode = "A00";
         this.Result = ChessResultColor.None;
         this.WhiteElo = this.BlackElo = 0;
         this.WhiteRatingType = this.BlackRatingType = ChessRatingType.Elo;
@@ -593,7 +595,7 @@ export class Chess {
 
     public static plyToTurn(ply: number, startPly?: number) {
         startPly = startPly || 0;
-        return intVal(1 + ((ply + startPly) - 1) / 2);
+        return toSafeInteger(1 + ((ply + startPly) - 1) / 2);
     }
 
     public static plyToColor(ply: number, startPly?: number) {

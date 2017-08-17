@@ -1,7 +1,7 @@
+import cloneDeep = require('lodash/cloneDeep');
+import indexOf = require('lodash/indexOf');
+import repeat = require('lodash/repeat');
 import { Hashtable } from 'onix-core/built/Hashtable';
-import { isFunction, isArray } from 'onix-core/built/fn/Types';
-import { inArray } from 'onix-core/built/fn/array/InArray';
-import { strRepeat } from 'onix-core/built/fn/string/StrRepeat';
 import { Color } from './Color';
 import { Castle } from './Castle';
 import { Direction } from './Direction';
@@ -16,29 +16,8 @@ const {
     Null: NULL_DIR, Up: UP,  Down: DOWN, Left: LEFT, Right: RIGHT, 
     UpLeft: UP_LEFT, UpRight: UP_RIGHT, DownLeft: DOWN_LEFT, DownRight: DOWN_RIGHT } = Direction;
 
-function safeClone(obj: any): any {
-    if (obj !== undefined) {
-        if (isFunction(obj.clone)) {
-            return obj.clone();
-        } else if (isArray(obj)) {
-            return [].concat(obj);
-        } else {
-            var result = {};
-            for (var name in obj) {
-                if (result.hasOwnProperty(name)) {
-                    result[name] = obj[name];
-                }
-            }
-
-            return result;
-        }
-    } else {
-        return undefined;
-    }
-}
-
 function is_valid_dest(dest: number, sqset: number[]) {
-    return ((sqset === undefined) || inArray(dest, sqset));
+    return ((sqset === undefined) || indexOf(sqset, dest) !== -1);
 }
 
 export const FenStandartStart = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
@@ -179,17 +158,17 @@ export class Position {
      * @param source {Position}
      */
     public copyFrom(source: Position) {
-        this.board = safeClone(source.board);
-        this.pieceCount = safeClone(source.pieceCount);
-        this.listPos = safeClone(source.listPos);
-        this.list = safeClone(source.list);
-        this.material = safeClone(source.material);
-        this.numOnFyle = safeClone(source.numOnFyle);
-        this.numOnRank = safeClone(source.numOnRank);
-        this.numOnLeftDiag = safeClone(source.numOnLeftDiag);
-        this.numOnRightDiag = safeClone(source.numOnRightDiag);
-        this.numOnSquareColor = safeClone(source.numOnSquareColor);
-        this.numOnSquareColor = safeClone(source.numOnSquareColor);
+        this.board = cloneDeep(source.board);
+        this.pieceCount = cloneDeep(source.pieceCount);
+        this.listPos = cloneDeep(source.listPos);
+        this.list = cloneDeep(source.list);
+        this.material = cloneDeep(source.material);
+        this.numOnFyle = cloneDeep(source.numOnFyle);
+        this.numOnRank = cloneDeep(source.numOnRank);
+        this.numOnLeftDiag = cloneDeep(source.numOnLeftDiag);
+        this.numOnRightDiag = cloneDeep(source.numOnRightDiag);
+        this.numOnSquareColor = cloneDeep(source.numOnSquareColor);
+        this.numOnSquareColor = cloneDeep(source.numOnSquareColor);
 
         this.EpTarget = source.EpTarget;
         this.whoMove = source.whoMove;
@@ -400,7 +379,7 @@ export class Position {
             // replace NOPIECE square with repeated "1" string
             for (i = 2; i <= 8; i++) {
                 var re = new RegExp(String(i), "g");
-                board_text = board_text.replace(re,  strRepeat("1", i));
+                board_text = board_text.replace(re,  repeat("1", i));
             }
 
             // remove slashes
