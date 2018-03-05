@@ -1,6 +1,6 @@
 {
   "name": "onix-chess",
-  "version": "1.1.15",
+  "version": "1.1.16",
   "description": "Onix chess library",
   "main": "built/index.js",
   "types": "built/index.d.ts",
@@ -21,17 +21,17 @@
   "author": "Nick Panteleeff",
   "license": "MIT",
   "dependencies": {
-    "lodash": "^4.17.4",
-    "onix-core": "^1.2.29",
+    "lodash": "^4.17.5",
+    "onix-core": "^1.2.32",
     "shortid": "^2.2.6",
     "warning": "^3.0.0"
   },
   "devDependencies": {
-    "@types/lodash": "^4.14.76",
-    "@types/node": "^7.0.43",
-    "source-map-loader": "^0.2.1",
+    "@types/lodash": "^4.14.104",
+    "@types/node": "^7.0.55",
+    "source-map-loader": "^0.2.3",
     "ts-loader": "^2.3.7",
-    "typescript": "^2.5.3",
+    "typescript": "^2.7.2",
     "webpack": "^2.3.3"
   }
 }
