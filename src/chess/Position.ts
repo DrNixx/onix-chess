@@ -1,7 +1,7 @@
 import cloneDeep = require('lodash/cloneDeep');
 import indexOf = require('lodash/indexOf');
 import repeat = require('lodash/repeat');
-import { Hashtable } from 'onix-core/built/Hashtable';
+import { Hashtable } from 'onix-core/dist/Hashtable';
 import { Color } from './Color';
 import { Castle } from './Castle';
 import { Direction } from './Direction';

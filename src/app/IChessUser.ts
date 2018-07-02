@@ -1,4 +1,4 @@
-import { IUser } from 'onix-core/built/app/IUser';
+import { IUser } from 'onix-core/dist/app/IUser';
 
 export interface IChessUser extends IUser {
     insite?: boolean,
