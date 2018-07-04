@@ -1,4 +1,9 @@
+.vscode
 node_modules
 dist
-.vscode
+
+/public/**/*.js
+/public/**/*.js.map
+
+stats.json
 npm-debug.log

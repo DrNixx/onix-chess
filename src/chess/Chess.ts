@@ -1,7 +1,7 @@
-import toSafeInteger = require('lodash/toSafeInteger');
-import isInteger = require('lodash/isInteger');
-import isNumber = require('lodash/isNumber');
-import indexOf = require('lodash/indexOf');
+import toSafeInteger from 'lodash-es/toSafeInteger';
+import isNumber from 'lodash-es/isNumber';
+import indexOf from 'lodash-es/indexOf';
+
 import { Hashtable } from 'onix-core';
 import { Color } from './Color';
 import { Piece } from './Piece';
