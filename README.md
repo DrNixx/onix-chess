@@ -1,6 +1,6 @@
 #onix-chess 
 
-[![npm version][npm-badge]][npm] [![npm downloads][npd-badge]][npm] [![dependencies Status][dps-badge]][npm]
+[![npm version][npm-badge]][npm] [![npm downloads][npd-badge]][npm] [![dependencies Status][dps-badge]][dps]
 
 Onix Chess classes library.
 
