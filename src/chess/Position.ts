@@ -8,6 +8,7 @@ import { Direction } from './Direction';
 import { Piece } from './Piece';
 import { Square } from './Square';
 import { SimpleMove } from './SimpleMove';
+import { FenString } from './FenString';
 
 /** Short aliases */
 const ns = Square.NullSquare;
@@ -19,43 +20,6 @@ const {
 function is_valid_dest(dest: number, sqset: number[]) {
     return ((sqset === undefined) || indexOf(sqset, dest) !== -1);
 }
-
-export const FenStandartStart = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
-export const FenEmptyBoard = "8/8/8/8/8/8/8/8 w KQkq - 0 1";
-const fenEmptyBoardRaw = "1111111111111111111111111111111111111111111111111111111111111111 w KQkq - 0 1";
-
-// Forsite to piece map
-const fen2Piece: Hashtable<number> = {
-    "1": noPiece,
-    "P": Piece.WPawn,
-    "K": Piece.WKing,
-    "Q": Piece.WQueen,
-    "R": Piece.WRook,
-    "N": Piece.WKnight,
-    "B": Piece.WBishop,
-    "p": Piece.BPawn,
-    "k": Piece.BKing,
-    "q": Piece.BQueen,
-    "r": Piece.BRook,
-    "n": Piece.BKnight,
-    "b": Piece.BBishop
-};
-
-// Piece to Forsite map
-const FP_p2f: string[] = [];
-FP_p2f[noPiece] = "1";
-FP_p2f[Piece.WPawn] = "P";
-FP_p2f[Piece.WKing] = "K";
-FP_p2f[Piece.WQueen] = "Q";
-FP_p2f[Piece.WRook] = "R";
-FP_p2f[Piece.WKnight] = "N";
-FP_p2f[Piece.WBishop] = "B";
-FP_p2f[Piece.BPawn] = "p";
-FP_p2f[Piece.BKing] = "k";
-FP_p2f[Piece.BQueen] = "q";
-FP_p2f[Piece.BRook] = "r";
-FP_p2f[Piece.BKnight] = "n";
-FP_p2f[Piece.BBishop] = "b";
 
 export enum SanCheckLevel
 {
@@ -75,9 +39,9 @@ export enum GenerateMode
  * Chess position
  */
 export class Position {
-    private board: number[] = [];
-    private captured: number[] = [];
-    private plyCount: number = 0;
+    private brd: number[] = [];
+    private capt: number[] = [];
+    private plyCnt: number = 0;
     private strictCastling: boolean = false;
     private pinned: number[] = [];
     private list: number[][] = [];
@@ -89,7 +53,7 @@ export class Position {
     private numOnLeftDiag: number[][] = [];
     private numOnRightDiag: number[][] = [];
     private numOnSquareColor: number[][] = [];
-    private whoMove: number = Color.White;
+    private wm: number = Color.White;
     
     public Castling: number = 0;
     public EpTarget: number;
@@ -103,17 +67,17 @@ export class Position {
         this.clear();
 
         if (fen) {
-            this.readFromFEN(fen);
+            FenString.toPosition(this, fen);
         }
     }
 
     public clear(): void {
-        this.whoMove = Color.White;
-        this.captured = [];
+        this.wm = Color.White;
+        this.capt = [];
         this.EpTarget = ns;
         this.Castling = 0;
         this.HalfMoveCount = 0;
-        this.plyCount = 0;
+        this.plyCnt = 0;
 
         this.pieceCount[Color.White] = 0;
         this.pieceCount[Color.Black] = 0;
@@ -125,10 +89,10 @@ export class Position {
         var j: number;
 
         for (i = 0; i <= 64; i++) {
-            this.board[i] = noPiece;
+            this.brd[i] = noPiece;
         }
 
-        this.board[ns] = 0;
+        this.brd[ns] = 0;
 
         for (i = Piece.WKing; i <= Piece.BPawn; i++) {
             this.material[i] = 0;
@@ -158,7 +122,7 @@ export class Position {
      * @param source {Position}
      */
     public copyFrom(source: Position) {
-        this.board = cloneDeep(source.board);
+        this.brd = cloneDeep(source.brd);
         this.pieceCount = cloneDeep(source.pieceCount);
         this.listPos = cloneDeep(source.listPos);
         this.list = cloneDeep(source.list);
@@ -171,8 +135,8 @@ export class Position {
         this.numOnSquareColor = cloneDeep(source.numOnSquareColor);
 
         this.EpTarget = source.EpTarget;
-        this.whoMove = source.whoMove;
-        this.plyCount = source.plyCount;
+        this.wm = source.wm;
+        this.plyCnt = source.plyCnt;
         this.HalfMoveCount = source.HalfMoveCount;
         this.Castling = source.Castling;
     }
@@ -188,29 +152,29 @@ export class Position {
     }
 
     public get WhoMove() {
-        return this.whoMove;
+        return this.wm;
     }
 
     public set WhoMove(value: number) {
-        this.whoMove = value;
+        this.wm = value;
     }
 
     /**
      * Byte board
      */
     public get Board(): number[] {
-        return this.board;
+        return this.brd;
     }
 
     public get Captured(): number[] {
-        return this.captured;
+        return this.capt;
     }
 
     /**
      * Get piece on square
      */
     getPiece = (sq: number): number => {
-        return this.board[sq];
+        return this.brd[sq];
     }
 
     /**
@@ -336,209 +300,24 @@ export class Position {
      * Return current halfmove humber
      */
     public get PlyCount(): number {
-        return this.plyCount;
+        return this.plyCnt;
     }
 
     /**
      * Get move number
      */
     public getMoveNo(): number {
-        return ((this.plyCount + 2) >> 1);
+        return ((this.plyCnt + 2) >> 1);
     }
 
     /**
      * Set move number
      */
     public setMoveNo(no: number): void {
-        this.plyCount = (no - 1) * 2;
-        if (this.whoMove === Color.Black) {
-            this.plyCount++;
+        this.plyCnt = (no - 1) * 2;
+        if (this.wm === Color.Black) {
+            this.plyCnt++;
         }
-    }
-
-    /**
-     * Set position from fen
-     * @param fen {String}
-     */
-    public readFromFEN(fen?: string): void {
-        if (!fen) {
-            fen = fenEmptyBoardRaw;
-        }
-
-        while (fen.indexOf("  ") >= 0) {
-            fen = fen.replace("  ", " ");
-        }
-
-        try {
-            this.clear();
-            var i: number = 0,
-                sq: number = 0;
-            var tok = fen.split(/\s+/);
-            var board_text = String(tok[0]);
-
-            // replace NOPIECE square with repeated "1" string
-            for (i = 2; i <= 8; i++) {
-                var re = new RegExp(String(i), "g");
-                board_text = board_text.replace(re,  repeat("1", i));
-            }
-
-            // remove slashes
-            board_text = board_text.replace(/\//g, "");
-            if (board_text.length !== 64) {
-                return undefined;
-            }
-
-            var fs2rs = new Array(64);
-            // fenSqToRealSquare[] converts a fen square (0 to 63) to its real
-            // square. E.g: [0] -> A8, [1] -> B8, .... [63] -> H1.
-            for (sq = 0; sq < 64; sq++) {
-                fs2rs[sq] = ((7 - Math.floor(sq / 8)) * 8 + (sq % 8));
-            }
-
-            for (sq = 0; sq < 64; sq++) {
-                var p = fen2Piece[board_text.charAt(sq)];
-                if (p !== noPiece) {
-                    this.addPiece(p, fs2rs[sq]);
-                }
-            }
-
-            // now the side to move:
-            this.whoMove = (tok[1] === "b") ? Color.Black : Color.White;
-
-            // now the castling flags:
-            this.Castling = 0;
-            if (tok[2] === "-") {
-                // do nothing
-            } else if (!tok[2] || (tok[2] === " ")) {
-                // the FEN has no castling field, so just guess that
-                // castling is possible whenever a king and rook are
-                // still on their starting squares:
-                if (this.board[4] === Piece.WKing) {
-                    if (this.board[0] === Piece.WRook) {
-                        this.setCastling(Color.White, Castle.QSide, true);
-                    }
-
-                    if (this.board[7] === Piece.WRook) {
-                        this.setCastling(Color.White, Castle.KSide, true);
-                    }
-                }
-                if (this.board[60] === Piece.BKing) {
-                    if (this.board[56] === Piece.BRook) {
-                        this.setCastling(Color.Black, Castle.QSide, true);
-                    }
-
-                    if (this.board[63] === Piece.BRook) {
-                        this.setCastling(Color.Black, Castle.KSide, true);
-                    }
-                }
-            } else {
-                for (i = 0; i < tok[2].length; i++) {
-                    if (tok[2].charAt(i) === "K") {
-                        this.setCastling(Color.White, Castle.KSide, true);
-                    }
-
-                    if (tok[2].charAt(i) === "Q") {
-                        this.setCastling(Color.White, Castle.QSide, true);
-                    }
-
-                    if (tok[2].charAt(i) === "k") {
-                        this.setCastling(Color.Black, Castle.KSide, true);
-                    }
-
-                    if (tok[2].charAt(i) === "q") {
-                        this.setCastling(Color.Black, Castle.QSide, true);
-                    }
-                }
-            }
-
-            // now the EP target:
-            if (tok.length > 3) {
-                if (tok[3].charAt(0) === "-") {
-                    this.EpTarget = ns;
-                } else {
-                    var fylec = tok[3].charAt(0);
-                    if (fylec < "a" || fylec > "h") {
-                        return undefined;
-                    }
-                    var rankc = tok[3].charAt(1);
-                    if (rankc !== "3" && rankc !== "6") {
-                        return undefined;
-                    }
-                    this.EpTarget = Square.create(Square.fyleFromChar(fylec), Square.rankFromChar(rankc));
-                }
-            }
-
-            /* tslint:disable:no-eval */
-            this.HalfMoveCount = (tok.length > 4) ? eval(tok[4]) : 0;
-
-            if (tok.length > 5) {
-                i = eval(tok[5]);
-                if (i >= 1) {
-                    this.setMoveNo(i);
-                }
-            }
-        } catch (e) {
-            this.clear();
-        }
-    }
-
-    /**
-     * Write FEN for position
-     */
-    public writeFEN(): string {
-        var str = "";
-        var pB: number;
-
-        for (var rank = 7; rank >= 0; rank--) {
-            var NOPIECERun = 0;
-            if (rank !== 7) { str += "/"; }
-            for (var fyle = 0; fyle <= 7; fyle++) {
-                pB = this.board[Square.create(fyle, rank)];
-                if (pB !== noPiece) {
-                    if (NOPIECERun) { str += NOPIECERun.toString(); }
-                    NOPIECERun = 0;
-                    str += FP_p2f[pB];
-                } else {
-                    NOPIECERun++;
-                }
-            }
-            if (NOPIECERun) { str += NOPIECERun.toString(); }
-        }
-
-        str += (this.whoMove === Color.White ? " w" : " b");
-
-        if (this.Castling === 0) {
-            str += " -";
-        } else {
-            str += " ";
-            if (this.getCastling(Color.White, Castle.KSide)) {
-                str += "K";
-            }
-
-            if (this.getCastling(Color.White, Castle.QSide)) {
-                str += "Q";
-            }
-
-            if (this.getCastling(Color.Black, Castle.KSide)) {
-                str += "k";
-            }
-
-            if (this.getCastling(Color.Black, Castle.QSide)) {
-                str += "q";
-            }
-        }
-
-        if (this.EpTarget === ns) {
-            str += " -";
-        } else {
-            str += " ";
-            str += Square.squareName(this.EpTarget);
-        }
-
-        str += " " + this.HalfMoveCount.toString();
-        str += " " + (Math.floor(this.plyCount / 2) + 1).toString();
-
-        return str;
     }
 
     /**
@@ -549,19 +328,19 @@ export class Position {
     public doSimpleMove(sm: SimpleMove): void {
         var from = sm.From;
         var to = sm.To;
-        var p = this.board[from];
+        var p = this.brd[from];
         var ptype = Piece.type(p);
-        var enemy = Color.flip(this.whoMove);
+        var enemy = Color.flip(this.wm);
 
         sm.PieceNum = this.listPos[from];
-        sm.CapturedPiece = this.board[to];
+        sm.CapturedPiece = this.brd[to];
         sm.CapturedSquare = to;
         sm.CastleFlags = this.Castling;
         sm.EpSquare = this.EpTarget;
         sm.OldHalfMoveClock = this.HalfMoveCount;
 
         this.HalfMoveCount++;
-        this.plyCount++;
+        this.plyCnt++;
 
         // handle enpassant capture:
         if ((ptype === Piece.Pawn) &&
@@ -570,7 +349,7 @@ export class Position {
             // this was an EP capture. We do not need to check it was a capture
             // since if a pawn lands on EPTarget it must capture to get there.
             var enemyPawn = Piece.create(enemy, Piece.Pawn);
-            sm.CapturedSquare = (this.whoMove === Color.White ? (to - 8) : (to + 8));
+            sm.CapturedSquare = (this.wm === Color.White ? (to - 8) : (to + 8));
             sm.CapturedPiece = enemyPawn;
         }
 
@@ -584,20 +363,20 @@ export class Position {
             this.material[sm.CapturedPiece]--;
             this.HalfMoveCount = 0;
             this.removeFromBoard(sm.CapturedPiece, sm.CapturedSquare);
-            this.captured[this.plyCount] = sm.CapturedPiece;
+            this.capt[this.plyCnt] = sm.CapturedPiece;
         }
 
         // handle promotion:
         if (sm.Promote !== noPiece) {
             this.material[p]--;
             this.removeFromBoard(p, from);
-            p = Piece.create(this.whoMove, sm.Promote);
+            p = Piece.create(this.wm, sm.Promote);
             this.material[p]++;
             this.addToBoard(p, from);
         }
 
         // now make the move:
-        this.list[this.whoMove][sm.PieceNum] = to;
+        this.list[this.wm][sm.PieceNum] = to;
         this.listPos[to] = sm.PieceNum;
         this.removeFromBoard(p, from);
         this.addToBoard(p, to);
@@ -608,7 +387,7 @@ export class Position {
         if ((ptype === Piece.King) &&
             (Square.fyle(from) === 4) &&
             (Square.fyle(to) === 2 || Square.fyle(to) === 6)) {
-            var rook = Piece.create(this.whoMove, Piece.Rook);
+            var rook = Piece.create(this.wm, Piece.Rook);
             if (Square.fyle(to) === 2) {
                 rookfrom = to - 2;
                 rookto = to + 1;
@@ -618,7 +397,7 @@ export class Position {
             }
 
             this.listPos[rookto] = this.listPos[rookfrom];
-            this.list[this.whoMove][this.listPos[rookto]] = rookto;
+            this.list[this.wm][this.listPos[rookto]] = rookto;
             this.removeFromBoard(rook, rookfrom);
             this.addToBoard(rook, rookto);
         }
@@ -626,12 +405,12 @@ export class Position {
         // handle clearing of castling flags:
         if (this.Castling) {
             if (ptype === Piece.King) {   // the king moved.
-                this.setCastling(this.whoMove, Castle.QSide, false);
-                this.setCastling(this.whoMove, Castle.KSide, false);
+                this.setCastling(this.wm, Castle.QSide, false);
+                this.setCastling(this.wm, Castle.KSide, false);
             }
 
             // see if a rook moved or was captured:
-            if (this.whoMove === Color.White) {
+            if (this.wm === Color.White) {
                 if (from === 0) { this.setCastling(Color.White, Castle.QSide, false); }
                 if (from === 7) { this.setCastling(Color.White, Castle.KSide, false); }
                 if (to === 56) { this.setCastling(Color.Black, Castle.QSide, false); }
@@ -652,21 +431,21 @@ export class Position {
             var toRank = Square.rank(to);
             if ((fromRank === 1) &&
                 (toRank === 3) &&
-                ((this.board[Square.move(to, LEFT)] === Piece.BPawn) ||
-                    (this.board[Square.move(to, RIGHT)] === Piece.BPawn))) {
+                ((this.brd[Square.move(to, LEFT)] === Piece.BPawn) ||
+                    (this.brd[Square.move(to, RIGHT)] === Piece.BPawn))) {
                 this.EpTarget = Square.move(from, UP);
             }
             if ((fromRank === 6) &&
                 (toRank === 4) &&
-                ((this.board[Square.move(to, LEFT)] === Piece.WPawn) ||
-                    (this.board[Square.move(to, RIGHT)] === Piece.WPawn))) {
+                ((this.brd[Square.move(to, LEFT)] === Piece.WPawn) ||
+                    (this.brd[Square.move(to, RIGHT)] === Piece.WPawn))) {
                 this.EpTarget = Square.move(from, DOWN);
             }
 
             this.HalfMoveCount = 0; // 50-move clock resets on pawn moves.
         }
 
-        this.whoMove = enemy;
+        this.wm = enemy;
         return;
     }
 
@@ -677,12 +456,12 @@ export class Position {
     public undoSimpleMove(sm: SimpleMove) {
         var from = sm.From;
         var to = sm.To;
-        var p = this.board[to];
+        var p = this.brd[to];
         this.EpTarget = sm.EpSquare;
         this.Castling = sm.CastleFlags;
         this.HalfMoveCount = sm.OldHalfMoveClock;
-        this.plyCount--;
-        this.whoMove = Color.flip(this.whoMove);
+        this.plyCnt--;
+        this.wm = Color.flip(this.wm);
         sm.PieceNum = this.listPos[to];
 
         // handle a capture: insert piece back into piece list.
@@ -691,7 +470,7 @@ export class Position {
         // value of the "to" field. The only time these two fields are
         // different is for an enpassant move.
         if (sm.CapturedPiece !== noPiece) {
-            var c = Color.flip(this.whoMove);
+            var c = Color.flip(this.wm);
             this.listPos[this.list[c][sm.CapturedNum]] = this.pieceCount[c];
             this.listPos[sm.CapturedSquare] = sm.CapturedNum;
             this.list[c][this.pieceCount[c]] = this.list[c][sm.CapturedNum];
@@ -703,25 +482,25 @@ export class Position {
         if (sm.Promote !== noPiece) {
             this.material[p]--;
             this.removeFromBoard(p, to);
-            p = Piece.create(this.whoMove, Piece.Pawn);
+            p = Piece.create(this.wm, Piece.Pawn);
             this.material[p]++;
             this.addToBoard(p, to);
         }
 
         // now make the move:
-        this.list[this.whoMove][sm.PieceNum] = from;
+        this.list[this.wm][sm.PieceNum] = from;
         this.listPos[from] = sm.PieceNum;
         this.removeFromBoard(p, to);
         this.addToBoard(p, from);
         if (sm.CapturedPiece !== noPiece) {
             this.addToBoard(sm.CapturedPiece, sm.CapturedSquare);
-            delete this.captured[this.plyCount + 1];
+            delete this.capt[this.plyCnt + 1];
         }
 
         // handle Castling:
         if ((Piece.type(p) === Piece.King) && Square.fyle(from) === 4
             && (Square.fyle(to) === 2 || Square.fyle(to) === 6)) {
-            var rook = (this.whoMove === Color.White ? Piece.WRook : Piece.BRook);
+            var rook = (this.wm === Color.White ? Piece.WRook : Piece.BRook);
             var rookfrom: number;
             var rookto: number;
             if (Square.fyle(to) === 2) {
@@ -730,7 +509,7 @@ export class Position {
                 rookfrom = to + 1; rookto = to - 1;
             }
             this.listPos[rookfrom] = this.listPos[rookto];
-            this.list[this.whoMove][this.listPos[rookto]] = rookfrom;
+            this.list[this.wm][this.listPos[rookto]] = rookfrom;
             this.removeFromBoard(rook, rookto);
             this.addToBoard(rook, rookfrom);
         }
@@ -739,8 +518,8 @@ export class Position {
     public makeSanString(sm: SimpleMove, flag: SanCheckLevel) {
         var san = "";
         sm.PieceNum = this.listPos[sm.From];
-        var from = this.list[this.whoMove][sm.PieceNum];
-        var p = Piece.type(this.board[from]);
+        var from = this.list[this.wm][sm.PieceNum];
+        var p = Piece.type(this.brd[from]);
         var to = sm.To;
         var mlist: SimpleMove[];
         if (p === Piece.Pawn) {
@@ -769,7 +548,7 @@ export class Position {
                 san += Castle.Q;
             } else {  // regular King move
                 san += "K";
-                if (this.board[to] !== noPiece) {
+                if (this.brd[to] !== noPiece) {
                     san += "x";
                 }
 
@@ -780,8 +559,8 @@ export class Position {
             san += Piece.toChar(p);
             // we only need to calculate legal moves to disambiguate if there
             // are more than one of this type of piece.
-            if (this.material[this.board[sm.From]] < 2) {
-                if (this.board[to] !== noPiece) {
+            if (this.material[this.brd[sm.From]] < 2) {
+                if (this.brd[to] !== noPiece) {
                     san += "x";
                 }
 
@@ -799,7 +578,7 @@ export class Position {
                 for (var i = 0; i < mlist.length; i++) {
                     var m2 = mlist[i];
                     var from2 = m2.From;
-                    var p2 = Piece.type(this.board[from2]);
+                    var p2 = Piece.type(this.brd[from2]);
                     if ((to === m2.To) && (from !== from2) && (p2 === p)) {
                         /* we have an ambiguity */
                         var f2 = Square.fyleChar(from2);
@@ -819,7 +598,7 @@ export class Position {
                     san += r;
                 }
 
-                if (this.board[to] !== noPiece) {
+                if (this.brd[to] !== noPiece) {
                     san += "x";
                 }
 
@@ -882,7 +661,7 @@ export class Position {
         var numChecks = 0;
         if (maybeInCheck) {
             var checkSquares: number[] = [];
-            numChecks = this.calcNumChecks(this.getKingSquare(this.whoMove), checkSquares);
+            numChecks = this.calcNumChecks(this.getKingSquare(this.wm), checkSquares);
             if (numChecks > 0) {
                 // the side to move IS in check:
                 this.genCheckEvasions(mlist, pieceType, genType, checkSquares);
@@ -892,11 +671,11 @@ export class Position {
 
         // the side to move is NOT in check. Iterate over each non-king
         // piece, and then generate King moves last of all:
-        var npieces = this.pieceCount[this.whoMove];
+        var npieces = this.pieceCount[this.wm];
 
         for (var x = 1; x < npieces; x++) {
-            var sq = this.list[this.whoMove][x];
-            var p = this.board[sq];
+            var sq = this.list[this.wm][x];
+            var p = this.brd[sq];
             var ptype = Piece.type(p);
 
 
@@ -916,8 +695,8 @@ export class Position {
                     if ((ptype === Piece.Queen) ||
                         ((ptype === Piece.Rook) && !Direction.isDiagonal(_pinned)) ||
                         ((ptype === Piece.Bishop) && Direction.isDiagonal(_pinned))) {
-                        this.genSliderMoves(mlist, this.whoMove, sq, _pinned, capturesOnly);
-                        this.genSliderMoves(mlist, this.whoMove, sq, Direction.opposite(_pinned), capturesOnly);
+                        this.genSliderMoves(mlist, this.wm, sq, _pinned, capturesOnly);
+                        this.genSliderMoves(mlist, this.wm, sq, Direction.opposite(_pinned), capturesOnly);
                     }
                 }
             } else {
@@ -946,21 +725,21 @@ export class Position {
         var to = sm.To;
         if (from > 63 || to > 63) { return false; }
         if (from === to) { return false; }
-        var mover = this.board[from];
-        var captured = this.board[to];
+        var mover = this.brd[from];
+        var captured = this.brd[to];
 
-        if (Piece.color(mover) !== this.whoMove) { return false; }
-        if (Piece.color(captured) === this.whoMove) { return false; }
+        if (Piece.color(mover) !== this.wm) { return false; }
+        if (Piece.color(captured) === this.wm) { return false; }
         if (sm.MovingPiece !== mover) { return false; }
         mover = Piece.type(mover);
         if (sm.Promote !== noPiece && mover !== Piece.Pawn) { return false; }
 
-        var enemy = Color.flip(this.whoMove);
+        var enemy = Color.flip(this.wm);
 
         if (mover === Piece.Pawn) {
             var rfrom = Square.rank(from);
             var rto = Square.rank(to);
-            if (this.whoMove === Color.Black) { rfrom = 7 - rfrom; rto = 7 - rto; }
+            if (this.wm === Color.Black) { rfrom = 7 - rfrom; rto = 7 - rto; }
             var rdiff = rto - rfrom;
             var fdiff = Square.fyle(to) - Square.fyle(from);
             if (rdiff < 1 || rdiff > 2) { return false; }
@@ -971,7 +750,7 @@ export class Position {
                     if (rfrom !== 1) { return false; }
                     // make sure the square in between is NOPIECE:
                     var midsquare = from + ((to - from) / 2);
-                    if (this.board[midsquare] !== noPiece) { return false; }
+                    if (this.brd[midsquare] !== noPiece) { return false; }
                 }
             } else {  // pawn capture:
                 if (rdiff !== 1) { return false; }
@@ -1000,7 +779,7 @@ export class Position {
             // make sure all the in-between squares are NOPIECE:
             var dest = from + delta;
             while (dest !== to) {
-                if (this.board[dest] !== noPiece) { return false; }
+                if (this.brd[dest] !== noPiece) { return false; }
                 dest += delta;
             }
         } else if (mover === Piece.Knight) {
@@ -1023,7 +802,7 @@ export class Position {
         }
 
         // the move looks good, but does it leave the king in check?
-        var kingSq = (mover === Piece.King) ? to : this.getKingSquare(this.whoMove);
+        var kingSq = (mover === Piece.King) ? to : this.getKingSquare(this.wm);
         this.doSimpleMove(sm);
         var nchecks = this.calcAttacks(enemy, kingSq);
         this.undoSimpleMove(sm);
@@ -1036,7 +815,7 @@ export class Position {
      * @param sq
      */
     private addToBoard(p: number, sq: number): void {
-        this.board[sq] = p;
+        this.brd[sq] = p;
         this.numOnRank[p][Square.rank(sq)]++;
         this.numOnFyle[p][Square.fyle(sq)]++;
         this.numOnLeftDiag[p][Square.leftDiag(sq)]++;
@@ -1050,7 +829,7 @@ export class Position {
      * @param sq
      */
     private removeFromBoard(p: number, sq: number): void {
-        this.board[sq] = noPiece;
+        this.brd[sq] = noPiece;
         this.numOnRank[p][Square.rank(sq)]--;
         this.numOnFyle[p][Square.fyle(sq)]--;
         this.numOnLeftDiag[p][Square.leftDiag(sq)]--;
@@ -1083,7 +862,7 @@ export class Position {
      * @param c
      * @returns {Number}
      */
-    private getKingSquare(c: number = this.whoMove): number {
+    private getKingSquare(c: number = this.wm): number {
         return this.list[c][0];
     }
 
@@ -1092,7 +871,7 @@ export class Position {
      * @param c
      * @returns {Number}
      */
-    private getEnemyKingSquare(c: number = this.whoMove): number {
+    private getEnemyKingSquare(c: number = this.wm): number {
         return this.list[1 - c][0];
     }
 
@@ -1101,7 +880,7 @@ export class Position {
      */
     private calcNumChecks(kingSq: number, checkSquares?: number[]): number {
         kingSq = (kingSq) ? kingSq : this.getKingSquare();
-        return this.calcAttacks(1 - this.whoMove, kingSq, checkSquares);
+        return this.calcAttacks(1 - this.wm, kingSq, checkSquares);
     }
 
     /**
@@ -1168,7 +947,7 @@ export class Position {
                 last = Square.last(target, dir);
                 while (dest !== last) {
                     dest += delta;
-                    p = this.board[dest];
+                    p = this.brd[dest];
                     if (p === noPiece) {
                         // square NOPIECE: keep searching
                         continue;
@@ -1205,7 +984,7 @@ export class Position {
                 last = Square.last(target, dir);
                 while (dest !== last) {
                     dest += delta;
-                    p = this.board[dest];
+                    p = this.brd[dest];
                     if (p === noPiece) {
                         // square NOPIECE: keep searching
                         continue;
@@ -1229,7 +1008,7 @@ export class Position {
             while (i < 20) {
                 dest = dests[i++];
                 if (dest === ns) { break; }
-                if (this.board[dest] === knight) {
+                if (this.brd[dest] === knight) {
                     fromSquares.push(dest);
                 }
             }
@@ -1239,22 +1018,22 @@ export class Position {
         if (side === Color.White) {
             if (Square.rank(target) !== 0) {  // if (Material[WP] > 0) {
                 sq = Square.move(target, DOWN_LEFT);
-                if (this.board[sq] === Piece.WPawn) {
+                if (this.brd[sq] === Piece.WPawn) {
                     fromSquares.push(sq);
                 }
                 sq = Square.move(target, DOWN_RIGHT);
-                if (this.board[sq] === Piece.WPawn) {
+                if (this.brd[sq] === Piece.WPawn) {
                     fromSquares.push(sq);
                 }
             }
         } else {
             if (Square.rank(target) !== 7) {  // if (Material[BP] > 0) {
                 sq = Square.move(target, UP_LEFT);
-                if (this.board[sq] === Piece.BPawn) {
+                if (this.brd[sq] === Piece.BPawn) {
                     fromSquares.push(sq);
                 }
                 sq = Square.move(target, UP_RIGHT);
-                if (this.board[sq] === Piece.BPawn) {
+                if (this.brd[sq] === Piece.BPawn) {
                     fromSquares.push(sq);
                 }
             }
@@ -1268,8 +1047,8 @@ export class Position {
             this.pinned[i] = NULL_DIR;
         }
 
-        var kingSq = this.getKingSquare(this.whoMove);
-        var enemy = Color.flip(this.whoMove);
+        var kingSq = this.getKingSquare(this.wm);
+        var enemy = Color.flip(this.wm);
         var enemyQueen = Piece.create(enemy, Piece.Queen);
         var enemyRook = Piece.create(enemy, Piece.Rook);
         var enemyBishop = Piece.create(enemy, Piece.Bishop);
@@ -1306,7 +1085,7 @@ export class Position {
         // appropriate piece (BISHOP) or (ROOK) is passed along with the
         // direction.
 
-        var king = this.getKingSquare(this.whoMove);
+        var king = this.getKingSquare(this.wm);
         var friendly = ns;
         var x = king;
         var last = Square.last(king, dir);
@@ -1314,11 +1093,11 @@ export class Position {
 
         while (x !== last) {
             x += delta;
-            var p = this.board[x];
+            var p = this.brd[x];
             if (p === noPiece) {
                 // square NOPIECE, so keep searching.
                 continue;
-            } else if (Piece.colorNotEmpty(p) === this.whoMove) {
+            } else if (Piece.colorNotEmpty(p) === this.wm) {
                 // found a friendly piece.
                 if (friendly === ns) {
                     // found first friendly in this direction
@@ -1359,8 +1138,8 @@ export class Position {
         sm.From = from;
         sm.To = to;
         sm.Promote = promo;
-        sm.MovingPiece = this.board[from];
-        sm.CapturedPiece = this.board[to];
+        sm.MovingPiece = this.brd[from];
+        sm.CapturedPiece = this.brd[to];
         mlist.push(sm);
     }
 
@@ -1384,7 +1163,7 @@ export class Position {
         var delta = Direction.delta(dir);
         while (dest !== last) {
             dest += delta;
-            var p = this.board[dest];
+            var p = this.brd[dest];
             if (p === noPiece) {
                 if (!capturesOnly) {
                     if (is_valid_dest(dest, sqset)) {
@@ -1423,7 +1202,7 @@ export class Position {
         while (true) {
             var dest = destArr[i++];
             if (dest === ns) { break; }
-            var p = this.board[dest];
+            var p = this.brd[dest];
             if (capturesOnly && (p === noPiece)) { continue; }
             if (Piece.color(p) !== color) {
                 if (is_valid_dest(dest, sqset)) {
@@ -1442,21 +1221,21 @@ export class Position {
      * @returns
      */
     private genCastling(mlist: SimpleMove[]): void {
-        var from = this.getKingSquare(this.whoMove);
-        if (from !== (this.whoMove === Color.White ? 4 : 60)) { return; }
+        var from = this.getKingSquare(this.wm);
+        if (from !== (this.wm === Color.White ? 4 : 60)) { return; }
         var enemyKingSq = this.getEnemyKingSquare();
         var target: number; var skip: number; var rookSq: number; var rookPiece: number;
         // queen side Castling:
-        if (!this.strictCastling || this.getCastling(this.whoMove, Castle.QSide)) {
-            if (this.whoMove === Color.White) {
+        if (!this.strictCastling || this.getCastling(this.wm, Castle.QSide)) {
+            if (this.wm === Color.White) {
                 target = 2; skip = 3; rookSq = 0; rookPiece = Piece.WRook;
             } else {
                 target = 58; skip = 59; rookSq = 56; rookPiece = Piece.BRook;
             }
 
-            if ((this.board[target] === noPiece) && (this.board[skip] === noPiece)
-                && (this.board[rookSq] === rookPiece)
-                && (this.board[target - 1] === noPiece) // squares B1 or B8 must be NOPIECE too!
+            if ((this.brd[target] === noPiece) && (this.brd[skip] === noPiece)
+                && (this.brd[rookSq] === rookPiece)
+                && (this.brd[target - 1] === noPiece) // squares B1 or B8 must be NOPIECE too!
                 && (this.calcNumChecks(target) === 0)
                 && (this.calcNumChecks(skip) === 0)
                 && (!Square.adjacent(target, enemyKingSq))) {
@@ -1465,8 +1244,8 @@ export class Position {
         }
 
         // king side Castling:
-        if (!this.strictCastling || this.getCastling(this.whoMove, Castle.KSide)) {
-            if (this.whoMove === Color.White) {
+        if (!this.strictCastling || this.getCastling(this.wm, Castle.KSide)) {
+            if (this.wm === Color.White) {
                 target = 6;
                 skip = 5;
                 rookSq = 7;
@@ -1475,8 +1254,8 @@ export class Position {
                 target = 62; skip = 61; rookSq = 63; rookPiece = Piece.BRook;
             }
 
-            if (this.board[target] === noPiece && this.board[skip] === noPiece
-                && (this.board[rookSq] === rookPiece)
+            if (this.brd[target] === noPiece && this.brd[skip] === noPiece
+                && (this.brd[rookSq] === rookPiece)
                 && (this.calcNumChecks(target) === 0)
                 && (this.calcNumChecks(skip) === 0)
                 && (!Square.adjacent(target, enemyKingSq))) {
@@ -1497,8 +1276,8 @@ export class Position {
     private genKingMoves(mlist: SimpleMove[], genType: number, castling: boolean): void {
         var kingSq = this.getKingSquare();
         var enemyKingSq = this.getEnemyKingSquare();
-        var enemy = Color.flip(this.whoMove);
-        var king = Piece.create(this.whoMove, Piece.King);
+        var enemy = Color.flip(this.wm);
+        var king = Piece.create(this.wm, Piece.King);
         var genNonCaptures = ((genType & GenerateMode.NonCaptures) !== 0);
 
         var destArr = Square.kingAttacks(kingSq);
@@ -1510,12 +1289,12 @@ export class Position {
 
             // only try this move if the target square has an enemy piece,
             // or if it is NOPIECE and non captures are to be generated:
-            if ((genNonCaptures && this.board[destSq] === noPiece) ||
-                (Piece.color(this.board[destSq]) === enemy)) {
+            if ((genNonCaptures && this.brd[destSq] === noPiece) ||
+                (Piece.color(this.brd[destSq]) === enemy)) {
                 // enemy piece or NOPIECE there, so try the move:
-                var captured = this.board[destSq];
-                this.board[destSq] = king;
-                this.board[kingSq] = noPiece;
+                var captured = this.brd[destSq];
+                this.brd[destSq] = king;
+                this.brd[kingSq] = noPiece;
                 // it is legal if the two kings will not be adjacent and the
                 // moving king will not be in check on its new square:
                 if (!Square.adjacent(destSq, enemyKingSq)) {
@@ -1524,8 +1303,8 @@ export class Position {
                     }
                 }
 
-                this.board[kingSq] = king;
-                this.board[destSq] = captured;
+                this.brd[kingSq] = king;
+                this.brd[destSq] = captured;
             }
 
             if (addThisMove) {
@@ -1568,25 +1347,25 @@ export class Position {
      */
     private isValidEnPassant(from: number, to: number): boolean {
         // check that this enpassant capture is legal:
-        var ownPawn = Piece.create(this.whoMove, Piece.Pawn);
-        var enemyPawn = Piece.create(Color.flip(this.whoMove), Piece.Pawn);
-        var enemyPawnSq = (this.whoMove === Color.White) ? to - 8 : to + 8;
-        var toSqPiece = this.board[to];
+        var ownPawn = Piece.create(this.wm, Piece.Pawn);
+        var enemyPawn = Piece.create(Color.flip(this.wm), Piece.Pawn);
+        var enemyPawnSq = (this.wm === Color.White) ? to - 8 : to + 8;
+        var toSqPiece = this.brd[to];
 
-        this.board[from] = noPiece;
-        this.board[to] = ownPawn;
-        this.board[enemyPawnSq] = noPiece;
+        this.brd[from] = noPiece;
+        this.brd[to] = ownPawn;
+        this.brd[enemyPawnSq] = noPiece;
         var isValid = this.isKingInCheck();
-        this.board[from] = ownPawn;
-        this.board[to] = toSqPiece;
-        this.board[enemyPawnSq] = enemyPawn;
+        this.brd[from] = ownPawn;
+        this.brd[to] = toSqPiece;
+        this.brd[enemyPawnSq] = enemyPawn;
         return isValid;
     }
 
     private _POSSIBLE_CAPTURE(d: number, from: number) {
         return (
             (d !== ns) &&
-            ((Piece.color(this.board[d]) === (Color.flip(this.whoMove))) ||
+            ((Piece.color(this.brd[d]) === (Color.flip(this.wm))) ||
                 (d === this.EpTarget && this.isValidEnPassant(from, d))));
     }
 
@@ -1610,7 +1389,7 @@ export class Position {
             promoRank: number,
             secondRank: number,
             dest: number;
-        if (this.whoMove === Color.White) {
+        if (this.wm === Color.White) {
             forward = Direction.Up;
             promoRank = 7;
             secondRank = 1;
@@ -1622,7 +1401,7 @@ export class Position {
 
         if (genNonCaptures && (dir === NULL_DIR || dir === forward || oppdir === forward)) {
             dest = Square.move(from, forward);
-            if (this.board[dest] === noPiece && (is_valid_dest(dest, sqset))) {
+            if (this.brd[dest] === noPiece && (is_valid_dest(dest, sqset))) {
                 if (Square.rank(dest) === promoRank) {
                     this.addPromotions(mlist, from, dest);
                 } else {
@@ -1630,9 +1409,9 @@ export class Position {
                 }
             }
 
-            if (Square.rank(from) === secondRank && this.board[dest] === noPiece) {
+            if (Square.rank(from) === secondRank && this.brd[dest] === noPiece) {
                 dest = Square.move(dest, forward);
-                if (this.board[dest] === noPiece && (is_valid_dest(dest, sqset))) {
+                if (this.brd[dest] === noPiece && (is_valid_dest(dest, sqset))) {
                     this.addLegalMove(mlist, from, dest, noPiece);
                 }
             }
@@ -1681,7 +1460,7 @@ export class Position {
         var genNonCaptures = ((genType & GenerateMode.NonCaptures) !== 0);
         var capturesOnly = !genNonCaptures;
 
-        var king = this.getKingSquare(this.whoMove);
+        var king = this.getKingSquare(this.wm);
 
         // if it's double check, we can ONLY move the king
         if (numChecks === 1) {
@@ -1699,7 +1478,7 @@ export class Position {
             if (dir !== NULL_DIR) {
                 var sq = Square.move(king, dir);
                 while (sq !== attackSq) {
-                    if (this.board[sq] === noPiece) { targets.push(sq); }
+                    if (this.brd[sq] === noPiece) { targets.push(sq); }
                     sq = Square.move(sq, dir);
                 }
             }
@@ -1708,10 +1487,10 @@ export class Position {
             // the king, don't bother since it cannot possibly block or
             // capture the piece that is giving check!
 
-            var numPieces = this.pieceCount[this.whoMove];
+            var numPieces = this.pieceCount[this.wm];
             for (var p2 = 1; p2 < numPieces; p2++) {
-                var from = this.list[this.whoMove][p2];
-                var p2piece = this.board[from];
+                var from = this.list[this.wm][p2];
+                var p2piece = this.brd[from];
                 if (this.pinned[p2] !== NULL_DIR) { continue; }
                 if (mask === noPiece || mask === Piece.type(p2piece)) {
                     if (Piece.type(p2piece) === Piece.Pawn) {
@@ -1722,7 +1501,7 @@ export class Position {
                         // a discovered check with the last pawn move so
                         // taking enpassant cannot get out of check.
                         if (this.EpTarget !== ns) {
-                            var pawnSq = (this.whoMove === Color.White ? this.EpTarget - 8 : this.EpTarget + 8);
+                            var pawnSq = (this.wm === Color.White ? this.EpTarget - 8 : this.EpTarget + 8);
                             if (pawnSq === attackSq) {
                                 var epset: number[] = [];
                                 epset.push(this.EpTarget);
@@ -1747,8 +1526,8 @@ export class Position {
      * If sqset != undefined, moves must be to a square in sqset.
      */
     private genPieceMoves(mlist: SimpleMove[], fromSq: number, capturesOnly: boolean, sqset?: number[]) {
-        var c = this.whoMove;
-        var p = this.board[fromSq];
+        var c = this.wm;
+        var p = this.brd[fromSq];
         var ptype = Piece.type(p);
 
         if (ptype === Piece.Knight) {
@@ -1772,26 +1551,26 @@ export class Position {
     }
 
     private matchLegalMove(mlist: SimpleMove[], mask: number, target: number) {
-        var total = this.material[Piece.create(this.whoMove, mask)];
+        var total = this.material[Piece.create(this.wm, mask)];
         var _cnt = 0;
         var dir: number;
         var sq: number;
 
-        var kingSq = this.getKingSquare(this.whoMove);
+        var kingSq = this.getKingSquare(this.wm);
         var tryMove = 0;
 
         // first, verify that the target square is NOPIECE or contains
         // an enemy piece:
-        var p = this.board[target];
-        if (p !== noPiece && Piece.color(p) === this.whoMove) {
+        var p = this.brd[target];
+        if (p !== noPiece && Piece.color(p) === this.wm) {
             return;
         }
 
         // loop through looking for pieces of type "mask". We start at 1
         // since the King is always the piece at position 0 in the list.
-        for (var x = 1; x < this.pieceCount[this.whoMove] && _cnt < total; x++) {
-            var sqPtr = this.list[this.whoMove][x];
-            p = this.board[sqPtr];
+        for (var x = 1; x < this.pieceCount[this.wm] && _cnt < total; x++) {
+            var sqPtr = this.list[this.wm][x];
+            p = this.brd[sqPtr];
             var pt = Piece.type(p);
             if (pt === mask) {
                 // increment count so we stop when we've seen all the Material[p] pieces of this type.
@@ -1808,7 +1587,7 @@ export class Position {
                             sq = Square.move(sqPtr, dir);
                             tryMove = 1;
                             while (sq !== target) {
-                                if (this.board[sq] !== noPiece) { // oops, piece in the way
+                                if (this.brd[sq] !== noPiece) { // oops, piece in the way
                                     tryMove = 0;
                                     break;
                                 }
@@ -1822,7 +1601,7 @@ export class Position {
                             sq = Square.move(sqPtr, dir);
                             tryMove = 1;
                             while (sq !== target) {
-                                if (this.board[sq] !== noPiece) { // oops, piece in the way
+                                if (this.brd[sq] !== noPiece) { // oops, piece in the way
                                     tryMove = 0;
                                     break;
                                 }
@@ -1836,7 +1615,7 @@ export class Position {
                             sq = Square.move(sqPtr, dir);
                             tryMove = 1;
                             while (sq !== target) {
-                                if (this.board[sq] !== noPiece) { // oops, piece in the way
+                                if (this.brd[sq] !== noPiece) { // oops, piece in the way
                                     tryMove = 0;
                                     break;
                                 }
@@ -1850,12 +1629,12 @@ export class Position {
                 // now, if tryMove is 1, the piece can get to target. We need
                 // to see if the move is legal or leaves the king in check.
                 if (tryMove === 1) {
-                    var captured = this.board[target];
-                    this.board[target] = p;
-                    this.board[sqPtr] = noPiece;
+                    var captured = this.brd[target];
+                    this.brd[target] = p;
+                    this.brd[sqPtr] = noPiece;
                     if (this.calcNumChecks(kingSq) > 0) { tryMove = 0; }
-                    this.board[sqPtr] = p;
-                    this.board[target] = captured;
+                    this.brd[sqPtr] = p;
+                    this.brd[target] = captured;
                     if (tryMove === 1) { this.addLegalMove(mlist, sqPtr, target, noPiece); }
                 }
             }
@@ -1864,7 +1643,7 @@ export class Position {
 
     protected matchKingMove(mlist: SimpleMove[], target: number) {
         mlist = [];
-        var kingSq = this.getKingSquare(this.whoMove);
+        var kingSq = this.getKingSquare(this.wm);
         var diff = target - kingSq;
 
         // valid diffs are: -9, -8, -7, -2, -1, 1, 2, 7, 8, 9. (-2,2: Castling)
@@ -1885,17 +1664,17 @@ export class Position {
         }
 
         if (diff === 2) { // king side Castling
-            if (kingSq !== (this.whoMove === Color.White ? 4 : 60)) {
+            if (kingSq !== (this.wm === Color.White ? 4 : 60)) {
                 return false;
             }
 
-            if (this.strictCastling && !this.getCastling(this.whoMove, Castle.QSide)) {
+            if (this.strictCastling && !this.getCastling(this.wm, Castle.QSide)) {
                 return false;
             }
 
             // we also need to verify that the target square does not
             // lie adjacent to the location of the enemy king!
-            if (this.board[kingSq + 1] !== noPiece || this.board[kingSq + 2] !== noPiece
+            if (this.brd[kingSq + 1] !== noPiece || this.brd[kingSq + 2] !== noPiece
                 || this.calcNumChecks(kingSq) > 0
                 || this.calcNumChecks(kingSq + 1) > 0
                 || this.calcNumChecks(kingSq + 2) > 0) {
@@ -1906,16 +1685,16 @@ export class Position {
         }
 
         if (diff === -2) { // queen side Castling
-            if (kingSq !== (this.whoMove === Color.White ? 4 : 60)) {
+            if (kingSq !== (this.wm === Color.White ? 4 : 60)) {
                 return false;
             }
 
-            if (this.strictCastling && !this.getCastling(this.whoMove, Castle.QSide)) {
+            if (this.strictCastling && !this.getCastling(this.wm, Castle.QSide)) {
                 return false;
             }
 
-            if (this.board[kingSq - 1] !== noPiece || this.board[kingSq - 2] !== noPiece
-                || this.board[kingSq - 3] !== noPiece
+            if (this.brd[kingSq - 1] !== noPiece || this.brd[kingSq - 2] !== noPiece
+                || this.brd[kingSq - 3] !== noPiece
                 || this.calcNumChecks(kingSq) > 0
                 || this.calcNumChecks(kingSq - 1) > 0
                 || this.calcNumChecks(kingSq - 2) > 0) {
@@ -1926,8 +1705,8 @@ export class Position {
             return true;
         }
 
-        var captured = this.board[target];
-        if (Piece.color(captured) === this.whoMove) {
+        var captured = this.brd[target];
+        if (Piece.color(captured) === this.wm) {
             // capturing a friendly piece!
             return false;
         }
@@ -1936,8 +1715,8 @@ export class Position {
         // leaves the King in check:
         // мы должны также проверить для смежности со вражеским Королем!!
 
-        this.board[target] = Piece.create(this.whoMove, Piece.King);
-        this.board[kingSq] = noPiece;
+        this.brd[target] = Piece.create(this.wm, Piece.King);
+        this.brd[kingSq] = noPiece;
         if (captured !== noPiece) {
             this.material[captured]--;
         }
@@ -1951,8 +1730,8 @@ export class Position {
             this.material[captured]++;
         }
 
-        this.board[target] = captured;
-        this.board[kingSq] = Piece.create(this.whoMove, Piece.King);
+        this.brd[target] = captured;
+        this.brd[kingSq] = Piece.create(this.wm, Piece.King);
         if (legal === 1) {
             this.addLegalMove(mlist, kingSq, target, noPiece);
             return true;
@@ -1962,4 +1741,4 @@ export class Position {
     }
 }
 
-export const ChessPositionStd = new Position(FenStandartStart);
+export const ChessPositionStd = new Position(FenString.fenStandartStart);

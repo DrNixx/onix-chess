@@ -6,10 +6,11 @@ import { Hashtable } from 'onix-core';
 import { Color } from './Color';
 import { Piece } from './Piece';
 import { Square } from './Square';
-import { Position, FenStandartStart, ChessPositionStd, SanCheckLevel, GenerateMode } from './Position';
+import { Position, ChessPositionStd, SanCheckLevel, GenerateMode } from './Position';
 import { Move } from './Move';
 import { SimpleMove } from './SimpleMove';
 import { IChessUser } from '../app/IChessUser';
+import { FenString } from './FenString';
 
 export enum ChessRatingType {
     None = 0,
@@ -173,7 +174,7 @@ export class Chess {
     private currentMove: Move;
     private currentPos: Position;
     private startPos: Position;
-    private startFen: string = FenStandartStart;
+    private startFen: string = FenString.fenStandartStart;
 
     /**
      * Side to move in starting position
@@ -219,7 +220,7 @@ export class Chess {
         this.Altered = false;
         this.pgnLastMovePos = this.pgnNextMovePos = 0;
 
-        if (this.settings.fen && (this.settings.fen != FenStandartStart)) {
+        if (this.settings.fen && (this.settings.fen != FenString.fenStandartStart)) {
             this.startFen = this.settings.fen;
             this.startPos = new Position(this.settings.fen);
         } else {
@@ -246,7 +247,7 @@ export class Chess {
     }
 
     public get NonStandardStart(): boolean {
-        return this.startFen !== FenStandartStart;
+        return this.startFen !== FenString.fenStandartStart;
     }
 
     private clear() {
@@ -348,7 +349,7 @@ export class Chess {
     private positionChanged() {
         if (!this.supressEvents) {
             if (!this.CurrentMove.Fen) {
-                this.CurrentMove.Fen = this.currentPos.writeFEN();
+                this.CurrentMove.Fen = FenString.fromPosition(this.currentPos);
             }
 
             this.Fen = this.CurrentMove.Fen;
@@ -477,7 +478,7 @@ export class Chess {
         const newMove = this.currentMove.append(sm);
 
         this.currentPos.doSimpleMove(sm);
-        newMove.Fen = currentPos.writeFEN()
+        newMove.Fen = FenString.fromPosition(currentPos);
         this.CurrentPlyCount++;
 
         if (!this.varDepth) {
