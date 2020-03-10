@@ -140,7 +140,7 @@ export class FenString {
         pos.clear();
 
         for (sq = 0; sq < 64; sq++) {
-            const p = fen2Piece[board_text.charAt(sq)];
+            const p = fen2Piece(board_text.charAt(sq));
             if (p !== Piece.NoPiece) {
                 pos.addPiece(p, fenToSquare(sq));
             }
