@@ -1,6 +1,6 @@
 {
   "name": "onix-chess",
-  "version": "1.8.29",
+  "version": "1.8.30",
   "description": "Onix chess library",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -9,7 +9,7 @@
     "webpack": "webpack --config webpack.config.js",
     "stats": "webpack --profile --json > stats.json",
     "statsp": "webpack --profile --json --mode=production > stats.json",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "mocha --require esm"
   },
   "keywords": [
     "onix",
@@ -31,7 +31,10 @@
   "devDependencies": {
     "@types/lodash-es": "^4.17.3",
     "@types/node": "^12.12.29",
+    "chai": "^4.2.0",
     "clean-webpack-plugin": "^3.0.0",
+    "esm": "^3.2.25",
+    "mocha": "^7.1.0",
     "ts-loader": "^6.2.1",
     "typescript": "^3.8.3",
     "webpack": "^4.42.0",
