@@ -40,6 +40,8 @@ FP_p2f[Piece.BRook] = "r";
 FP_p2f[Piece.BKnight] = "n";
 FP_p2f[Piece.BBishop] = "b";
 
+const fenEmptyBoardStd = "8/8/8/8/8/8/8/8 w KQkq - 0 1";
+
 function fen2Piece(fenCharacter: string): number
 {
     return (fenPieces[fenCharacter]) ? fenPieces[fenCharacter] : Piece.NoPiece;
@@ -50,75 +52,82 @@ function fenToSquare(sq: number): number
     return ((7 - Math.floor(sq / 8)) * 8 + (sq % 8));
 }
 
-const fenEmptyBoardRaw = "1111111111111111111111111111111111111111111111111111111111111111 w KQkq - 0 1";
+function normalizeFen(fen: string): string {
+    if (!fen) {
+        return fenEmptyBoardStd;
+    }
+
+    while (fen.indexOf("  ") >= 0) {
+        fen = fen.replace("  ", " ");
+    }
+
+    return fen;
+}
+
+/** Flags **/
+export enum FenFormat {
+    board = 0,
+    color = 1,
+    castlingEp = 2,
+    complete = 3,
+}
+ 
 
 export class FenString {
     public static fenStandartStart = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
-    public static fenEmptyBoard = "8/8/8/8/8/8/8/8 w KQkq - 0 1";
+    public static fenEmptyBoard = fenEmptyBoardStd;
 
-    /** Flags **/
-    public static fenCompact = 0;
-    public static fenBoard = 1;
-    public static fenCastlingEp = 2;
-    public static fenFull = 3;
-
-    public static toStringBoard(fen: string): string
-    {
-        if (!fen) {
-            fen = fenEmptyBoardRaw;
-        }
-
-        while (fen.indexOf("  ") >= 0) {
-            fen = fen.replace("  ", " ");
-        }
+    public static trim(fen: string, flag: FenFormat) {
+        fen = normalizeFen(fen);
 
         const tok = fen.split(/\s+/);
-        let board_text = String(tok[0]);
+        let result = String(tok[0]);
 
-        // replace NOPIECE square with repeated "1" string
-        for (let i: number = 2; i <= 8; i++) {
-            var re = new RegExp(String(i), "g");
-            board_text = board_text.replace(re,  repeat("1", i));
+        if (flag >= FenFormat.color) {
+            if (tok.length > 1) {
+                //  color
+                result += (tok[1] === "b") ? " b" : " w";
+
+                if (flag >= FenFormat.castlingEp) {
+                    if (tok.length > 2) {
+                        // castling
+                        result += " " + tok[2];
+                        
+                        if (tok.length > 3) {
+                            // enpassant
+                            result += " " + tok[3];
+
+                            if (flag >= FenFormat.complete) {
+                                if (tok.length > 4) {
+                                    // half-move count
+                                    result += " " + tok[4];
+
+                                    if (tok.length > 5) {
+                                        // move number
+                                        result += " " + tok[5];
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         }
 
-        // remove slashes
-        board_text = board_text.replace(/\//g, "");
-        if (board_text.length !== 64) {
-            return undefined;
-        }
-
-        return board_text;
-    }
-
-    public static toByteBoard(fen: string)
-    {
-        const board_text = FenString.toStringBoard(fen);
-
-        const board = [];
-        for (let i: number = 0; i < 64; i++) {
-            board[fenToSquare(i)] = fen2Piece(board_text.charAt(i));
-        }
-
-        return board;
+        return result;
     }
 
     public static toPosition(pos: Position, fen: string, forceCastling: boolean = true) {
-        if (!fen) {
-            fen = fenEmptyBoardRaw;
-        }
+        fen = normalizeFen(fen);
 
-        while (fen.indexOf("  ") >= 0) {
-            fen = fen.replace("  ", " ");
-        }
-
-        var i: number = 0,
-            sq: number = 0;
-        var tok = fen.split(/\s+/);
-        var board_text = String(tok[0]);
+        const tok = fen.split(/\s+/);
+        let board_text = String(tok[0]);
+        let i: number = 0;
+        let sq: number = 0;
 
         // replace NOPIECE square with repeated "1" string
         for (i = 2; i <= 8; i++) {
-            var re = new RegExp(String(i), "g");
+            const re = new RegExp(String(i), "g");
             board_text = board_text.replace(re,  repeat("1", i));
         }
 
@@ -131,13 +140,13 @@ export class FenString {
         pos.clear();
 
         for (sq = 0; sq < 64; sq++) {
-            var p = fen2Piece[board_text.charAt(sq)];
+            const p = fen2Piece[board_text.charAt(sq)];
             if (p !== Piece.NoPiece) {
                 pos.addPiece(p, fenToSquare(sq));
             }
         }
 
-        if (tok[1]) {
+        if (tok.length > 1) {
             // now the side to move:
             pos.WhoMove = (tok[1] === "b") ? Color.Black : Color.White;
         }
@@ -145,7 +154,7 @@ export class FenString {
         const board = pos.Board;
 
         pos.Castling = 0;
-        if (tok[2] || forceCastling) {
+        if ((tok.length > 2) || forceCastling) {
             if (tok[2] === "-") {
                 // do nothing
             } else if (!tok[2] || (tok[2] === " ")) {
@@ -219,14 +228,14 @@ export class FenString {
         return true;
     }
 
-    public static fromPosition(pos: Position, flag: number = FenString.fenFull) {
+    public static fromPosition(pos: Position, flag: FenFormat = FenFormat.complete) {
         let fen = "";
-        var pB: number;
+        let pB: number;
 
         const board = pos.Board;
         for (let rank = 7; rank >= 0; rank--) {
             let NOPIECERun = 0;
-            if ((rank !== 7) && (flag > FenString.fenCompact)) { fen += "/"; }
+            if (rank !== 7) { fen += "/"; }
             for (let fyle = 0; fyle <= 7; fyle++) {
                 pB = board[Square.create(fyle, rank)];
                 if (pB !== Piece.NoPiece) {
@@ -240,10 +249,10 @@ export class FenString {
             if (NOPIECERun) { fen += NOPIECERun.toString(); }
         }
 
-        if (flag >= FenString.fenBoard) {
+        if (flag >= FenFormat.color) {
             fen += (pos.WhoMove == Color.Black ? " b" : " w");
 
-            if (flag >= FenString.fenCastlingEp) {
+            if (flag >= FenFormat.castlingEp) {
                 if (pos.Castling === 0) {
                     fen += " -";
                 } else {
@@ -272,7 +281,7 @@ export class FenString {
                     fen += Square.squareName(pos.EpTarget);
                 }
 
-                if (flag >= FenString.fenFull) {
+                if (flag >= FenFormat.complete) {
                     fen += " " + pos.HalfMoveCount.toString();
                     fen += " " + (Math.floor(pos.PlyCount / 2) + 1).toString();
                 }
