@@ -6,7 +6,7 @@ Onix Chess classes library.
 
 ## Copyright & License
 
-© 2017 Nick Panteleeff
+© 2017-2020 Nick Panteleeff
 
 [MIT License](/LICENSE)
 
@@ -15,5 +15,5 @@ Onix Chess classes library.
 [dps-badge]: https://david-dm.org/DrNixx/onix-chess/status.svg
 [dps]: https://david-dm.org/DrNixx/onix-chess
 [npm]: https://www.npmjs.com/package/onix-chess
-[fossa-badge]: https://app.fossa.com/api/projects/git%2Bgithub.com%2FDrNixx%2Fonix-core.svg?type=shield
-[fossa]: https://app.fossa.com/projects/git%2Bgithub.com%2FDrNixx%2Fonix-core?ref=badge_shield
+[fossa-badge]: https://app.fossa.com/api/projects/git%2Bgithub.com%2FDrNixx%2Fonix-chess.svg?type=shield
+[fossa]: https://app.fossa.com/projects/git%2Bgithub.com%2FDrNixx%2Fonix-chess?ref=badge_shield
