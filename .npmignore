@@ -5,6 +5,7 @@
 /tsconfig.json
 /*.config.js
 /*.js.map
+/.babelrc
 /.gitattributes
 /.gitignore
 /.npmignore
