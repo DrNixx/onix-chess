@@ -1,7 +1,5 @@
 import cloneDeep from 'lodash-es/cloneDeep';
 import indexOf from 'lodash-es/indexOf';
-import repeat from 'lodash-es/repeat';
-import { Hashtable } from 'onix-core/dist/Hashtable';
 import { Color } from './Color';
 import { Castle } from './Castle';
 import { Direction } from './Direction';
@@ -17,7 +15,7 @@ const {
     Null: NULL_DIR, Up: UP,  Down: DOWN, Left: LEFT, Right: RIGHT, 
     UpLeft: UP_LEFT, UpRight: UP_RIGHT, DownLeft: DOWN_LEFT, DownRight: DOWN_RIGHT } = Direction;
 
-function is_valid_dest(dest: number, sqset: number[]) {
+function is_valid_dest(dest: number, sqset: number[] | undefined) {
     return ((sqset === undefined) || indexOf(sqset, dest) !== -1);
 }
 
@@ -56,7 +54,7 @@ export class Position {
     private wm: number = Color.White;
     
     public Castling: number = 0;
-    public EpTarget: number;
+    public EpTarget: number = ns;
     public HalfMoveCount: number = 0;
     
 
@@ -85,8 +83,8 @@ export class Position {
         this.list[Color.Black] = [];
         this.listPos = [];
 
-        var i: number;
-        var j: number;
+        let i: number;
+        let j: number;
 
         for (i = 0; i <= 64; i++) {
             this.brd[i] = noPiece;
@@ -146,7 +144,7 @@ export class Position {
      * @returns {ChessPosition}
      */
     public clone() {
-        var sp = new Position();
+        const sp = new Position();
         sp.copyFrom(this);
         return sp;
     }
@@ -205,7 +203,7 @@ export class Position {
      * @returns {Boolean}
      */
     public addPiece(p: number, sq: number): boolean {
-        var c = Piece.color(p);
+        const c = Piece.color(p);
         if (this.pieceCount[c] === 16) { return false; }
 
         if (Piece.type(p) === Piece.King) {
@@ -215,7 +213,7 @@ export class Position {
             // king is always at the start of the piece list, so move the piece
             // already at location 0 if there is one:
             if (this.pieceCount[c] > 0) {
-                var oldsq = this.list[c][0];
+                const oldsq = this.list[c][0];
                 this.list[c][this.pieceCount[c]] = oldsq;
                 this.listPos[oldsq] = this.pieceCount[c];
             }
@@ -241,7 +239,7 @@ export class Position {
      */
     public removePiece(p: number, sq: number): boolean {
         // TODO: check method
-        var c = Piece.color(p);
+        const c = Piece.color(p);
         if (this.pieceCount[c] === 0) { return false; }
         if (this.material[p] === 0) { return false; }
 
@@ -265,7 +263,7 @@ export class Position {
      */
     public getCastling(c: number, dir: Castle): boolean {
         /* tslint:disable:no-bitwise */
-        var b = (c === Color.White ? 1 : 4);
+        let b = (c === Color.White ? 1 : 4);
         if (dir === Castle.KSide) {
             b += b;
         }
@@ -283,7 +281,7 @@ export class Position {
      */
     public setCastling(c: number, dir: Castle, flag: boolean): void {
         /* tslint:disable:no-bitwise */
-        var b = (c === Color.White) ? 1 : 4;
+        let b = (c === Color.White) ? 1 : 4;
         if (dir === Castle.KSide) {
             b += b;
         }
@@ -326,11 +324,11 @@ export class Position {
      * @param sm {SimpleMove}
      */
     public doSimpleMove(sm: SimpleMove): void {
-        var from = sm.From;
-        var to = sm.To;
-        var p = this.brd[from];
-        var ptype = Piece.type(p);
-        var enemy = Color.flip(this.wm);
+        const from = sm.From;
+        const to = sm.To;
+        let p = this.brd[from];
+        const ptype = Piece.type(p);
+        const enemy = Color.flip(this.wm);
 
         sm.PieceNum = this.listPos[from];
         sm.CapturedPiece = this.brd[to];
@@ -348,7 +346,7 @@ export class Position {
             (Square.fyle(from) !== Square.fyle(to))) {
             // this was an EP capture. We do not need to check it was a capture
             // since if a pawn lands on EPTarget it must capture to get there.
-            var enemyPawn = Piece.create(enemy, Piece.Pawn);
+            const enemyPawn = Piece.create(enemy, Piece.Pawn);
             sm.CapturedSquare = (this.wm === Color.White ? (to - 8) : (to + 8));
             sm.CapturedPiece = enemyPawn;
         }
@@ -381,13 +379,13 @@ export class Position {
         this.removeFromBoard(p, from);
         this.addToBoard(p, to);
 
-        var rookfrom = 0;
-        var rookto = 0;
+        let rookfrom = 0;
+        let rookto = 0;
         // handle Castling:
         if ((ptype === Piece.King) &&
             (Square.fyle(from) === 4) &&
             (Square.fyle(to) === 2 || Square.fyle(to) === 6)) {
-            var rook = Piece.create(this.wm, Piece.Rook);
+            let rook = Piece.create(this.wm, Piece.Rook);
             if (Square.fyle(to) === 2) {
                 rookfrom = to - 2;
                 rookto = to + 1;
@@ -427,8 +425,8 @@ export class Position {
         // enemy pawn is on a square where enpassant may be possible.
         this.EpTarget = ns;
         if (ptype === Piece.Pawn) {
-            var fromRank = Square.rank(from);
-            var toRank = Square.rank(to);
+            const fromRank = Square.rank(from);
+            const toRank = Square.rank(to);
             if ((fromRank === 1) &&
                 (toRank === 3) &&
                 ((this.brd[Square.move(to, LEFT)] === Piece.BPawn) ||
@@ -454,9 +452,9 @@ export class Position {
      * @param sm {SimpleMove}
      */
     public undoSimpleMove(sm: SimpleMove) {
-        var from = sm.From;
-        var to = sm.To;
-        var p = this.brd[to];
+        const from = sm.From;
+        const to = sm.To;
+        let p = this.brd[to];
         this.EpTarget = sm.EpSquare;
         this.Castling = sm.CastleFlags;
         this.HalfMoveCount = sm.OldHalfMoveClock;
@@ -470,7 +468,7 @@ export class Position {
         // value of the "to" field. The only time these two fields are
         // different is for an enpassant move.
         if (sm.CapturedPiece !== noPiece) {
-            var c = Color.flip(this.wm);
+            const c = Color.flip(this.wm);
             this.listPos[this.list[c][sm.CapturedNum]] = this.pieceCount[c];
             this.listPos[sm.CapturedSquare] = sm.CapturedNum;
             this.list[c][this.pieceCount[c]] = this.list[c][sm.CapturedNum];
@@ -500,13 +498,15 @@ export class Position {
         // handle Castling:
         if ((Piece.type(p) === Piece.King) && Square.fyle(from) === 4
             && (Square.fyle(to) === 2 || Square.fyle(to) === 6)) {
-            var rook = (this.wm === Color.White ? Piece.WRook : Piece.BRook);
-            var rookfrom: number;
-            var rookto: number;
+            const rook = (this.wm === Color.White ? Piece.WRook : Piece.BRook);
+            let rookfrom: number;
+            let rookto: number;
             if (Square.fyle(to) === 2) {
-                rookfrom = to - 2; rookto = to + 1;
+                rookfrom = to - 2; 
+                rookto = to + 1;
             } else {
-                rookfrom = to + 1; rookto = to - 1;
+                rookfrom = to + 1; 
+                rookto = to - 1;
             }
             this.listPos[rookfrom] = this.listPos[rookto];
             this.list[this.wm][this.listPos[rookto]] = rookfrom;
@@ -516,14 +516,14 @@ export class Position {
     }
 
     public makeSanString(sm: SimpleMove, flag: SanCheckLevel) {
-        var san = "";
+        let san = "";
         sm.PieceNum = this.listPos[sm.From];
-        var from = this.list[this.wm][sm.PieceNum];
-        var p = Piece.type(this.brd[from]);
-        var to = sm.To;
-        var mlist: SimpleMove[];
+        const from = this.list[this.wm][sm.PieceNum];
+        const p = Piece.type(this.brd[from]);
+        const to = sm.To;
+        let mlist: SimpleMove[];
         if (p === Piece.Pawn) {
-            var capture = false;
+            let capture = false;
             if (Square.fyle(from) !== Square.fyle(to)) {  // pawn capture
                 san += Square.fyleChar(from);
                 san += "x";
@@ -569,20 +569,19 @@ export class Position {
             } else {
                 // disambiguate moves here:
                 // sHOULD handle 3-way ambiguity!  Looks like it does OK.
-                var ambiguous_fyle = false;
-                var ambiguous_rank = false;
-                var f = Square.fyleChar(from);
-                var r = Square.rankChar(from);
+                let ambiguous_fyle = false;
+                let ambiguous_rank = false;
+                const f = Square.fyleChar(from);
+                const r = Square.rankChar(from);
                 mlist = [];
                 this.matchLegalMove(mlist, p, to);
-                for (var i = 0; i < mlist.length; i++) {
-                    var m2 = mlist[i];
-                    var from2 = m2.From;
-                    var p2 = Piece.type(this.brd[from2]);
+                for (let i = 0; i < mlist.length; i++) {
+                    const m2 = mlist[i];
+                    const from2 = m2.From;
+                    const p2 = Piece.type(this.brd[from2]);
                     if ((to === m2.To) && (from !== from2) && (p2 === p)) {
                         /* we have an ambiguity */
-                        var f2 = Square.fyleChar(from2);
-                        // var r2 = Square.Square_RankChar(from2);
+                        const f2 = Square.fyleChar(from2);
                         if (f === f2) {  // ambiguous fyle, so print rank
                             ambiguous_fyle = true;
                         } else {        // ambiguous rank, so print fyle
@@ -611,9 +610,9 @@ export class Position {
             // now we make the move to test for check:
             this.doSimpleMove(sm);
             if (this.isKingInCheck()) {
-                var ch = "+";
+                let ch = "+";
                 if (flag > 1) {
-                    mlist = this.generateMoves(noPiece, GenerateMode.All, true);
+                    mlist = this.generateMoves();
                     if (mlist.length === 0) {
                         ch = "#";
                     }
@@ -633,11 +632,11 @@ export class Position {
      * If the specified pieceType is not NOPIECE, then only legal moves for that type of piece 
      * are generated.
      */
-    public generateMoves(pieceType: number, genType: number, maybeInCheck: boolean) {
-        var genNonCaptures = (genType & GenerateMode.NonCaptures) !== 0;
-        var capturesOnly = !genNonCaptures;
+    public generateMoves(pieceType: number = noPiece, genType: number = GenerateMode.All, maybeInCheck: boolean = true) {
+        const genNonCaptures = (genType & GenerateMode.NonCaptures) !== 0;
+        const capturesOnly = !genNonCaptures;
 
-        var mask = 0;
+        let mask = 0;
         if (pieceType !== noPiece) {
             mask = 1 << pieceType;
         } else {
@@ -650,7 +649,7 @@ export class Position {
         }
 
         // use the objects own move list if none was provided:
-        var mlist: SimpleMove[] = [];
+        const mlist: SimpleMove[] = [];
 
         // compute which pieces of the side to move are this.pinned to the king:
         this.calcPins();
@@ -658,9 +657,9 @@ export class Position {
         // determine if the side to move is in check and find where the
         // checking pieces are, unless the caller has passed maybeInCheck=false
         // indicating it is CERTAIN the side to move is not in check here.
-        var numChecks = 0;
+        let numChecks = 0;
         if (maybeInCheck) {
-            var checkSquares: number[] = [];
+            const checkSquares: number[] = [];
             numChecks = this.calcNumChecks(this.getKingSquare(this.wm), checkSquares);
             if (numChecks > 0) {
                 // the side to move IS in check:
@@ -671,16 +670,16 @@ export class Position {
 
         // the side to move is NOT in check. Iterate over each non-king
         // piece, and then generate King moves last of all:
-        var npieces = this.pieceCount[this.wm];
+        const npieces = this.pieceCount[this.wm];
 
-        for (var x = 1; x < npieces; x++) {
-            var sq = this.list[this.wm][x];
-            var p = this.brd[sq];
-            var ptype = Piece.type(p);
+        for (let x = 1; x < npieces; x++) {
+            const sq = this.list[this.wm][x];
+            const p = this.brd[sq];
+            const ptype = Piece.type(p);
 
 
             if (!(mask & (1 << ptype))) { continue; }
-            var _pinned = this.pinned[x];
+            const _pinned = this.pinned[x];
             // if this.pinned[x] == dir (not NULL_DIR), x can ONLY move along
             // that direction or its opposite.
 
@@ -713,7 +712,7 @@ export class Position {
 
         // lastly, king moves...
         if (mask & (1 << Piece.King)) {
-            var castling = !numChecks;
+            const castling = !numChecks;
             this.genKingMoves(mlist, genType, castling);
         }
 
@@ -721,12 +720,12 @@ export class Position {
     }
 
     public isLegalMove(sm: SimpleMove): boolean {
-        var from = sm.From;
-        var to = sm.To;
+        const from = sm.From;
+        const to = sm.To;
         if (from > 63 || to > 63) { return false; }
         if (from === to) { return false; }
-        var mover = this.brd[from];
-        var captured = this.brd[to];
+        let mover = this.brd[from];
+        const captured = this.brd[to];
 
         if (Piece.color(mover) !== this.wm) { return false; }
         if (Piece.color(captured) === this.wm) { return false; }
@@ -734,14 +733,14 @@ export class Position {
         mover = Piece.type(mover);
         if (sm.Promote !== noPiece && mover !== Piece.Pawn) { return false; }
 
-        var enemy = Color.flip(this.wm);
+        const enemy = Color.flip(this.wm);
 
         if (mover === Piece.Pawn) {
-            var rfrom = Square.rank(from);
-            var rto = Square.rank(to);
+            let rfrom = Square.rank(from);
+            let rto = Square.rank(to);
             if (this.wm === Color.Black) { rfrom = 7 - rfrom; rto = 7 - rto; }
-            var rdiff = rto - rfrom;
-            var fdiff = Square.fyle(to) - Square.fyle(from);
+            const rdiff = rto - rfrom;
+            const fdiff = Square.fyle(to) - Square.fyle(from);
             if (rdiff < 1 || rdiff > 2) { return false; }
             if (fdiff < -1 || fdiff > 1) { return false; }
             if (fdiff === 0) {  // pawn push:
@@ -749,7 +748,7 @@ export class Position {
                 if (rdiff === 2) {  // two-square push:
                     if (rfrom !== 1) { return false; }
                     // make sure the square in between is NOPIECE:
-                    var midsquare = from + ((to - from) / 2);
+                    const midsquare = from + ((to - from) / 2);
                     if (this.brd[midsquare] !== noPiece) { return false; }
                 }
             } else {  // pawn capture:
@@ -762,7 +761,7 @@ export class Position {
 
             // check the promotion piece:
             if (rto === 7) {
-                var p = sm.Promote;
+                const p = sm.Promote;
                 if (p !== Piece.Queen && p !== Piece.Rook && p !== Piece.Bishop && p !== Piece.Knight) {
                     return false;
                 }
@@ -771,13 +770,13 @@ export class Position {
             }
         } else if (Piece.isSlider(mover)) {
             // make sure the direction is valid:
-            var dir = Square.direction(from, to);
+            const dir = Square.direction(from, to);
             if (dir === NULL_DIR) { return false; }
             if (mover === Piece.Rook && Direction.isDiagonal(dir)) { return false; }
             if (mover === Piece.Bishop && !Direction.isDiagonal(dir)) { return false; }
-            var delta = Direction.delta(dir);
+            const delta = Direction.delta(dir);
             // make sure all the in-between squares are NOPIECE:
-            var dest = from + delta;
+            let dest = from + delta;
             while (dest !== to) {
                 if (this.brd[dest] !== noPiece) { return false; }
                 dest += delta;
@@ -789,9 +788,9 @@ export class Position {
             if (!Square.adjacent(from, to)) {
                 // the move must be castling, or illegal.
                 if (this.isKingInCheck()) { return false; }
-                var mlist: SimpleMove[] = [];
+                const mlist: SimpleMove[] = [];
                 this.genCastling(mlist);
-                for (var i = 0; i < mlist.length; i++) {
+                for (let i = 0; i < mlist.length; i++) {
                     if ((mlist[i].From === from) && (mlist[i].To === to)) {
                         return false;
                     }
@@ -802,9 +801,9 @@ export class Position {
         }
 
         // the move looks good, but does it leave the king in check?
-        var kingSq = (mover === Piece.King) ? to : this.getKingSquare(this.wm);
+        const kingSq = (mover === Piece.King) ? to : this.getKingSquare(this.wm);
         this.doSimpleMove(sm);
-        var nchecks = this.calcAttacks(enemy, kingSq);
+        const nchecks = this.calcAttacks(enemy, kingSq);
         this.undoSimpleMove(sm);
         return (nchecks === 0);
     }
@@ -895,19 +894,19 @@ export class Position {
      * Эта функция также добавляет список атакующих клеток в параметре fromSqs, если он не undefined.
      */
     private calcAttacks(side: number, target: number, fromSqs?: number[]): number {
-        var fromSquares = (fromSqs !== undefined) ? fromSqs : [];
-        var queen: number;
-        var rook: number;
-        var bishop: number;
-        var knight: number;
-        var delta: number;
-        var dest: number;
-        var dirs: number[] = [];
-        var dir: number;
-        var last: number;
-        var p: number;
-        var sq: number;
-        var i: number;
+        const fromSquares = (fromSqs !== undefined) ? fromSqs : [];
+        let queen: number;
+        let rook: number;
+        let bishop: number;
+        let knight: number;
+        let delta: number;
+        let dest: number;
+        let dirs: number[] = [];
+        let dir: number;
+        let last: number;
+        let p: number;
+        let sq: number;
+        let i: number;
 
         // attacks Bishop/Queen/Rook: look at each of the 8 directions
         if (side === Color.White) {
@@ -922,13 +921,13 @@ export class Position {
             knight = Piece.BKnight;
         }
 
-        var numQueensRooks = this.material[queen] + this.material[rook];
-        var numQueensBishops = this.material[queen] + this.material[bishop];
+        const numQueensRooks = this.material[queen] + this.material[rook];
+        const numQueensBishops = this.material[queen] + this.material[bishop];
 
         // we only bother if there are any sliding pieces of each type:
         if (numQueensRooks > 0) {
-            var fyle = Square.fyle(target);
-            var rank = Square.rank(target);
+            const fyle = Square.fyle(target);
+            const rank = Square.rank(target);
 
             dirs = [];
             if (this.fyleCount(queen, fyle) + this.fyleCount(rook, fyle) > 0) {
@@ -965,8 +964,8 @@ export class Position {
 
         // now diagonal sliders: Queens/Bishops:
         if (numQueensBishops > 0) {
-            var left = Square.leftDiag(target);
-            var right = Square.rightDiag(target);
+            const left = Square.leftDiag(target);
+            const right = Square.rightDiag(target);
             dirs = [];
             if (this.leftDiagCount(queen, left) + this.leftDiagCount(bishop, left) > 0) {
                 dirs.push(UP_LEFT);
@@ -1003,7 +1002,7 @@ export class Position {
         // now knight checks: we only bother if there is a knight on the
         // opposite square color of the target square color.
         if ((this.material[knight] > 0) && (this.squareColorCount(knight, Color.flip(Square.color(target)))) > 0) {
-            var dests = Square.knightAttacks(target);
+            const dests = Square.knightAttacks(target);
             i = 0;
             while (i < 20) {
                 dest = dests[i++];
@@ -1043,36 +1042,36 @@ export class Position {
     }
 
     private calcPins(): void {
-        for (var i = 0; i < 16; i++) {
+        for (let i = 0; i < 16; i++) {
             this.pinned[i] = NULL_DIR;
         }
 
-        var kingSq = this.getKingSquare(this.wm);
-        var enemy = Color.flip(this.wm);
-        var enemyQueen = Piece.create(enemy, Piece.Queen);
-        var enemyRook = Piece.create(enemy, Piece.Rook);
-        var enemyBishop = Piece.create(enemy, Piece.Bishop);
+        const kingSq = this.getKingSquare(this.wm);
+        const enemy = Color.flip(this.wm);
+        const enemyQueen = Piece.create(enemy, Piece.Queen);
+        const enemyRook = Piece.create(enemy, Piece.Rook);
+        const enemyBishop = Piece.create(enemy, Piece.Bishop);
 
         // pins and checks from Bishops/Queens/Rooks:
-        var fyle = Square.fyle(kingSq);
+        const fyle = Square.fyle(kingSq);
         if (this.fyleCount(enemyQueen, fyle) + this.fyleCount(enemyRook, fyle) > 0) {
             this.calcPinsDir(UP, Piece.Rook);
             this.calcPinsDir(DOWN, Piece.Rook);
         }
 
-        var rank = Square.rank(kingSq);
+        const rank = Square.rank(kingSq);
         if (this.rankCount(enemyQueen, rank) + this.rankCount(enemyRook, rank) > 0) {
             this.calcPinsDir(LEFT, Piece.Rook);
             this.calcPinsDir(RIGHT, Piece.Rook);
         }
 
-        var ld = Square.leftDiag(kingSq);
+        const ld = Square.leftDiag(kingSq);
         if (this.leftDiagCount(enemyQueen, ld) + this.leftDiagCount(enemyBishop, ld) > 0) {
             this.calcPinsDir(UP_LEFT, Piece.Bishop);
             this.calcPinsDir(DOWN_RIGHT, Piece.Bishop);
         }
 
-        var rd = Square.rightDiag(kingSq);
+        const rd = Square.rightDiag(kingSq);
         if (this.rightDiagCount(enemyQueen, rd) + this.rightDiagCount(enemyBishop, rd) > 0) {
             this.calcPinsDir(UP_RIGHT, Piece.Bishop);
             this.calcPinsDir(DOWN_LEFT, Piece.Bishop);
@@ -1085,15 +1084,15 @@ export class Position {
         // appropriate piece (BISHOP) or (ROOK) is passed along with the
         // direction.
 
-        var king = this.getKingSquare(this.wm);
-        var friendly = ns;
-        var x = king;
-        var last = Square.last(king, dir);
-        var delta = Direction.delta(dir);
+        const king = this.getKingSquare(this.wm);
+        let friendly = ns;
+        let x = king;
+        const last = Square.last(king, dir);
+        const delta = Direction.delta(dir);
 
         while (x !== last) {
             x += delta;
-            var p = this.brd[x];
+            const p = this.brd[x];
             if (p === noPiece) {
                 // square NOPIECE, so keep searching.
                 continue;
@@ -1110,7 +1109,7 @@ export class Position {
                 // found an enemy piece
                 if (friendly !== ns) {
                     // potential pin:
-                    var ptype = Piece.type(p);
+                    const ptype = Piece.type(p);
                     if (ptype === Piece.Queen || ptype === attacker) {
                         this.pinned[this.listPos[friendly]] = dir;
                     }
@@ -1131,7 +1130,7 @@ export class Position {
      * @returns
      */
     private addLegalMove(mlist: SimpleMove[], from: number, to: number, promo: number) {
-        var sm = new SimpleMove();
+        const sm = new SimpleMove();
         // we do NOT set the pre-move castling/ep flags, or the captured
         // piece info, here since that is ONLY needed if the move is
         // going to be executed with DoSimpleMove() and then undone.
@@ -1158,12 +1157,12 @@ export class Position {
      */
     private genSliderMoves(mlist: SimpleMove[], color: number, fromSq: number, dir: number, capturesOnly?: boolean, sqset?: number[]) {
         capturesOnly = !!capturesOnly;
-        var dest = fromSq;
-        var last = Square.last(fromSq, dir);
-        var delta = Direction.delta(dir);
+        let dest = fromSq;
+        const last = Square.last(fromSq, dir);
+        const delta = Direction.delta(dir);
         while (dest !== last) {
             dest += delta;
-            var p = this.brd[dest];
+            const p = this.brd[dest];
             if (p === noPiece) {
                 if (!capturesOnly) {
                     if (is_valid_dest(dest, sqset)) {
@@ -1197,12 +1196,12 @@ export class Position {
      */
     private genKnightMoves(mlist: SimpleMove[], color: number, fromSq: number, sqset?: number[], capturesOnly?: boolean): void {
         capturesOnly = !!capturesOnly;
-        var destArr = Square.knightAttacks(fromSq);
-        var i = 0;
+        const destArr = Square.knightAttacks(fromSq);
+        let i = 0;
         while (true) {
-            var dest = destArr[i++];
+            const dest = destArr[i++];
             if (dest === ns) { break; }
-            var p = this.brd[dest];
+            const p = this.brd[dest];
             if (capturesOnly && (p === noPiece)) { continue; }
             if (Piece.color(p) !== color) {
                 if (is_valid_dest(dest, sqset)) {
@@ -1221,10 +1220,14 @@ export class Position {
      * @returns
      */
     private genCastling(mlist: SimpleMove[]): void {
-        var from = this.getKingSquare(this.wm);
+        const from = this.getKingSquare(this.wm);
         if (from !== (this.wm === Color.White ? 4 : 60)) { return; }
-        var enemyKingSq = this.getEnemyKingSquare();
-        var target: number; var skip: number; var rookSq: number; var rookPiece: number;
+        const enemyKingSq = this.getEnemyKingSquare();
+        let target: number; 
+        let skip: number; 
+        let rookSq: number; 
+        let rookPiece: number;
+
         // queen side Castling:
         if (!this.strictCastling || this.getCastling(this.wm, Castle.QSide)) {
             if (this.wm === Color.White) {
@@ -1274,25 +1277,25 @@ export class Position {
      * @returns
      */
     private genKingMoves(mlist: SimpleMove[], genType: number, castling: boolean): void {
-        var kingSq = this.getKingSquare();
-        var enemyKingSq = this.getEnemyKingSquare();
-        var enemy = Color.flip(this.wm);
-        var king = Piece.create(this.wm, Piece.King);
-        var genNonCaptures = ((genType & GenerateMode.NonCaptures) !== 0);
+        const kingSq = this.getKingSquare();
+        const enemyKingSq = this.getEnemyKingSquare();
+        const enemy = Color.flip(this.wm);
+        const king = Piece.create(this.wm, Piece.King);
+        const genNonCaptures = ((genType & GenerateMode.NonCaptures) !== 0);
 
-        var destArr = Square.kingAttacks(kingSq);
-        var i = 0;
-        var destSq: number;
+        const destArr = Square.kingAttacks(kingSq);
+        let i = 0;
+        let destSq: number;
         while ((destSq = destArr[i++]) !== ns) {
             // try this move and see if it legal:
-            var addThisMove = false;
+            let addThisMove = false;
 
             // only try this move if the target square has an enemy piece,
             // or if it is NOPIECE and non captures are to be generated:
             if ((genNonCaptures && this.brd[destSq] === noPiece) ||
                 (Piece.color(this.brd[destSq]) === enemy)) {
                 // enemy piece or NOPIECE there, so try the move:
-                var captured = this.brd[destSq];
+                const captured = this.brd[destSq];
                 this.brd[destSq] = king;
                 this.brd[kingSq] = noPiece;
                 // it is legal if the two kings will not be adjacent and the
@@ -1347,15 +1350,15 @@ export class Position {
      */
     private isValidEnPassant(from: number, to: number): boolean {
         // check that this enpassant capture is legal:
-        var ownPawn = Piece.create(this.wm, Piece.Pawn);
-        var enemyPawn = Piece.create(Color.flip(this.wm), Piece.Pawn);
-        var enemyPawnSq = (this.wm === Color.White) ? to - 8 : to + 8;
-        var toSqPiece = this.brd[to];
+        const ownPawn = Piece.create(this.wm, Piece.Pawn);
+        const enemyPawn = Piece.create(Color.flip(this.wm), Piece.Pawn);
+        const enemyPawnSq = (this.wm === Color.White) ? to - 8 : to + 8;
+        const toSqPiece = this.brd[to];
 
         this.brd[from] = noPiece;
         this.brd[to] = ownPawn;
         this.brd[enemyPawnSq] = noPiece;
-        var isValid = this.isKingInCheck();
+        const isValid = this.isKingInCheck();
         this.brd[from] = ownPawn;
         this.brd[to] = toSqPiece;
         this.brd[enemyPawnSq] = enemyPawn;
@@ -1383,12 +1386,13 @@ export class Position {
      * @returns
      */
     private genPawnMoves(mlist: SimpleMove[], from: number, dir: number, genType: number, sqset?: number[]) {
-        var genNonCaptures = ((genType & GenerateMode.NonCaptures) !== 0);
-        var oppdir = Direction.opposite(dir);
-        var forward: number,
-            promoRank: number,
-            secondRank: number,
-            dest: number;
+        const genNonCaptures = ((genType & GenerateMode.NonCaptures) !== 0);
+        const oppdir = Direction.opposite(dir);
+        let forward: number;
+        let promoRank: number;
+        let secondRank: number;
+        let dest: number;
+        
         if (this.wm === Color.White) {
             forward = Direction.Up;
             promoRank = 7;
@@ -1420,7 +1424,7 @@ export class Position {
         // now do captures: left, then right
         // to be a possible capture, dest square must be EPTarget or hold
         // an enemy piece.
-        var capdir = forward | LEFT;
+        let capdir = forward | LEFT;
         if (dir === NULL_DIR || dir === capdir || oppdir === capdir) {
             dest = Square.move(from, capdir);
             if (this._POSSIBLE_CAPTURE(dest, from) && (is_valid_dest(dest, sqset))) {
@@ -1455,12 +1459,11 @@ export class Position {
      * @returns
      */
     private genCheckEvasions(mlist: SimpleMove[], mask: number, genType: number, checkSquares: number[]): void {
-        var numChecks = checkSquares.length;
+        const numChecks = checkSquares.length;
+        const genNonCaptures = ((genType & GenerateMode.NonCaptures) !== 0);
+        const capturesOnly = !genNonCaptures;
 
-        var genNonCaptures = ((genType & GenerateMode.NonCaptures) !== 0);
-        var capturesOnly = !genNonCaptures;
-
-        var king = this.getKingSquare(this.wm);
+        const king = this.getKingSquare(this.wm);
 
         // if it's double check, we can ONLY move the king
         if (numChecks === 1) {
@@ -1469,14 +1472,14 @@ export class Position {
             // first, generate a list of targets: squares between the king
             // and attacker to block, and the attacker's square.
 
-            var attackSq: number = checkSquares[0];
-            var dir: number = Square.direction(king, attackSq);
-            var targets: number[] = [];  // set of blocking/capturing squares.
+            const attackSq: number = checkSquares[0];
+            const dir: number = Square.direction(king, attackSq);
+            const targets: number[] = [];  // set of blocking/capturing squares.
             targets.push(attackSq);
 
             // now add squares we can might be able to block on.
             if (dir !== NULL_DIR) {
-                var sq = Square.move(king, dir);
+                let sq = Square.move(king, dir);
                 while (sq !== attackSq) {
                     if (this.brd[sq] === noPiece) { targets.push(sq); }
                     sq = Square.move(sq, dir);
@@ -1487,10 +1490,10 @@ export class Position {
             // the king, don't bother since it cannot possibly block or
             // capture the piece that is giving check!
 
-            var numPieces = this.pieceCount[this.wm];
-            for (var p2 = 1; p2 < numPieces; p2++) {
-                var from = this.list[this.wm][p2];
-                var p2piece = this.brd[from];
+            const numPieces = this.pieceCount[this.wm];
+            for (let p2 = 1; p2 < numPieces; p2++) {
+                const from = this.list[this.wm][p2];
+                const p2piece = this.brd[from];
                 if (this.pinned[p2] !== NULL_DIR) { continue; }
                 if (mask === noPiece || mask === Piece.type(p2piece)) {
                     if (Piece.type(p2piece) === Piece.Pawn) {
@@ -1501,9 +1504,9 @@ export class Position {
                         // a discovered check with the last pawn move so
                         // taking enpassant cannot get out of check.
                         if (this.EpTarget !== ns) {
-                            var pawnSq = (this.wm === Color.White ? this.EpTarget - 8 : this.EpTarget + 8);
+                            const pawnSq = (this.wm === Color.White ? this.EpTarget - 8 : this.EpTarget + 8);
                             if (pawnSq === attackSq) {
-                                var epset: number[] = [];
+                                const epset: number[] = [];
                                 epset.push(this.EpTarget);
                                 this.genPawnMoves(mlist, from, NULL_DIR, genType, epset);
                             }
@@ -1526,9 +1529,9 @@ export class Position {
      * If sqset != undefined, moves must be to a square in sqset.
      */
     private genPieceMoves(mlist: SimpleMove[], fromSq: number, capturesOnly: boolean, sqset?: number[]) {
-        var c = this.wm;
-        var p = this.brd[fromSq];
-        var ptype = Piece.type(p);
+        const c = this.wm;
+        const p = this.brd[fromSq];
+        const ptype = Piece.type(p);
 
         if (ptype === Piece.Knight) {
             this.genKnightMoves(mlist, c, fromSq, sqset, capturesOnly);
@@ -1551,27 +1554,27 @@ export class Position {
     }
 
     private matchLegalMove(mlist: SimpleMove[], mask: number, target: number) {
-        var total = this.material[Piece.create(this.wm, mask)];
-        var _cnt = 0;
-        var dir: number;
-        var sq: number;
+        const total = this.material[Piece.create(this.wm, mask)];
+        let _cnt = 0;
+        let dir: number;
+        let sq: number;
 
-        var kingSq = this.getKingSquare(this.wm);
-        var tryMove = 0;
+        const kingSq = this.getKingSquare(this.wm);
+        let tryMove = 0;
 
         // first, verify that the target square is NOPIECE or contains
         // an enemy piece:
-        var p = this.brd[target];
+        let p = this.brd[target];
         if (p !== noPiece && Piece.color(p) === this.wm) {
             return;
         }
 
         // loop through looking for pieces of type "mask". We start at 1
         // since the King is always the piece at position 0 in the list.
-        for (var x = 1; x < this.pieceCount[this.wm] && _cnt < total; x++) {
-            var sqPtr = this.list[this.wm][x];
+        for (let x = 1; x < this.pieceCount[this.wm] && _cnt < total; x++) {
+            const sqPtr = this.list[this.wm][x];
             p = this.brd[sqPtr];
-            var pt = Piece.type(p);
+            const pt = Piece.type(p);
             if (pt === mask) {
                 // increment count so we stop when we've seen all the Material[p] pieces of this type.
                 tryMove = 0;
@@ -1629,7 +1632,7 @@ export class Position {
                 // now, if tryMove is 1, the piece can get to target. We need
                 // to see if the move is legal or leaves the king in check.
                 if (tryMove === 1) {
-                    var captured = this.brd[target];
+                    const captured = this.brd[target];
                     this.brd[target] = p;
                     this.brd[sqPtr] = noPiece;
                     if (this.calcNumChecks(kingSq) > 0) { tryMove = 0; }
@@ -1641,10 +1644,10 @@ export class Position {
         }
     }
 
-    protected matchKingMove(mlist: SimpleMove[], target: number) {
+    protected matchKingMove(mlist: SimpleMove[], target: number): boolean {
         mlist = [];
-        var kingSq = this.getKingSquare(this.wm);
-        var diff = target - kingSq;
+        const kingSq = this.getKingSquare(this.wm);
+        const diff = target - kingSq;
 
         // valid diffs are: -9, -8, -7, -2, -1, 1, 2, 7, 8, 9. (-2,2: Castling)
         if (diff < -9 || diff > 9) {
@@ -1705,7 +1708,7 @@ export class Position {
             return true;
         }
 
-        var captured = this.brd[target];
+        const captured = this.brd[target];
         if (Piece.color(captured) === this.wm) {
             // capturing a friendly piece!
             return false;
@@ -1721,7 +1724,7 @@ export class Position {
             this.material[captured]--;
         }
 
-        var legal = 0;
+        let legal = 0;
         if (this.calcNumChecks(target) === 0) {
             legal = 1;
         }
@@ -1739,6 +1742,47 @@ export class Position {
 
         return false;
     }
+
+    /**
+     * 
+     * Given a move in coordinate notation, e.g. "e2e4" or "g1f3", generates the legal move it represents.
+     * If "reverse" is true, coordinates in reverse order are acceptable, e.g. "f3g1" for 1.Nf3.
+     * @param str 
+     * @param reverse 
+     */
+    public readCoordMove(str: string, reverse: boolean = false): SimpleMove | null {
+        let promo = noPiece;
+        str = str.toLowerCase();
+        
+        if (str.length === 5) {
+            promo = Piece.typeFromChar(str.charAt(4).toLowerCase());
+        } else if (str.length !== 4) {
+            return null;
+        }
+
+        const fromFyle = Square.fyleFromChar(str.charAt(0));
+        const fromRank = Square.rankFromChar(str.charAt(1));
+        const from = Square.create(fromFyle, fromRank);
+        const toFyle = Square.fyleFromChar(str.charAt(2));
+        const toRank = Square.rankFromChar(str.charAt(3));
+        const to = Square.create(toFyle, toRank);
+        
+        const mlist = this.generateMoves();
+        for (let i = 0; i < mlist.length; i++) {
+            const sm = mlist[i];
+            if (sm.Promote == promo) {
+                if ((sm.From == from) && (sm.To == to)) {
+                    return sm;
+                }
+
+                if (reverse && (sm.To == from) && (sm.From == to)) {
+                    return sm;
+                }
+            }
+        }
+
+        return null;
+    }
 }
 
-export const ChessPositionStd = new Position(FenString.fenStandartStart);
+export const ChessPositionStd = new Position(FenString.standartStart);

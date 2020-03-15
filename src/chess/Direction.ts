@@ -156,16 +156,15 @@ const squareMove = (sq: number, dir: number) => {
 /**
  * Matrix for movment.
  */
-var __sqDir: number[][];
+const __sqDir: number[][] = [];
 
 /**
  * Initialize matrix.
  */
 function initializeDirections(): void {
-    __sqDir = [];
-    var i: number,
-        j: number,
-        __dirArray = [
+    let i: number;
+    let j: number;
+    const __dirArray = [
             UP,
             DOWN,
             LEFT,
@@ -187,7 +186,7 @@ function initializeDirections(): void {
 
     // Make allowed movment now
     for (i = 0; i <= 63; i++) {
-        var x = 0;
+        let x = 0;
         while (__dirArray[x] !== NULL_DIR) {
             j = squareMove(i, __dirArray[x]);
             while (j !== ns) {

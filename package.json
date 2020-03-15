@@ -34,6 +34,7 @@
     "@babel/register": "^7.8.6",
     "@types/lodash-es": "^4.17.3",
     "@types/node": "^13.9.1",
+    "@types/shortid": "0.0.29",
     "chai": "^4.2.0",
     "clean-webpack-plugin": "^3.0.0",
     "mocha": "^7.1.0",

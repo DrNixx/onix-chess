@@ -20,21 +20,21 @@ export class Move {
     private piece_num: number;
     private permanent: boolean;
     private legal_moves: SimpleMove[];
-    private parent: Move = null;
+    private parent: Move | null = null;
     
-    private prev_move: Move;
-    private next_move: Move;
+    private prev_move: Move | null;
+    private next_move: Move | null;
     
     public START_MARKER: boolean;
     public END_MARKER: boolean;
 
     public uid: string;
-    public id: number;
-    public moveData: SimpleMove = null;
+    public id: number = 0;
+    public moveData: SimpleMove | null;
     public Name: string;
     public WhoMove: number;
     public Comments: string;
-    public Fen: string;
+    public Fen: string | undefined;
 
     /**
      * @constructor
@@ -61,7 +61,7 @@ export class Move {
         this.legal_moves = [];
     }
 
-    public static init(fen?: string, parent?: Move): Move {
+    public static init(fen?: string, parent?: Move | null): Move {
         const firstMove = new Move();
         firstMove.Name = "FirstMove";
         firstMove.Fen = fen;
@@ -89,7 +89,7 @@ export class Move {
     }
 
     public isFirst() {
-        return this.START_MARKER || this.prev_move.START_MARKER;
+        return this.START_MARKER || (this.prev_move && this.prev_move.START_MARKER);
     }
 
     public isBegin() {
@@ -105,16 +105,16 @@ export class Move {
         return move;
     }
 
-    public get Prev(): Move {
+    public get Prev(): Move | null {
         return this.prev_move;
     }
 
-    public get Next(): Move {
+    public get Next(): Move | null {
         return this.next_move;
     }
 
     public isLast() {
-        return this.END_MARKER || this.next_move.END_MARKER;
+        return this.END_MARKER || (this.next_move && this.next_move.END_MARKER);
     }
 
     public isEnd() {
@@ -141,12 +141,14 @@ export class Move {
     /**
      * Add and enter variation
      */
-    public addVariation(): Move {
-        let varRoot: Move = null;
+    public addVariation(): Move | null {
+        let varRoot: Move | null = null;
         if (!this.START_MARKER) {
             const prev = this.Prev;
-            varRoot = Move.init(prev.Fen, prev);
-            prev.vars.push(varRoot);
+            if (prev) {
+                varRoot = Move.init(prev.Fen, prev);
+                prev.vars.push(varRoot);
+            }
         }
         
         return varRoot;
@@ -155,8 +157,8 @@ export class Move {
     /**
      * Enter variation
      */
-    public moveIntoVariation(no: number): Move {
-        let varRoot: Move = null;
+    public moveIntoVariation(no: number): Move | null {
+        let varRoot: Move | null = null;
         if ((no > 0) && (no <= this.numVars)) {
             varRoot = this.vars[no].Next;
         }
@@ -181,7 +183,7 @@ export class Move {
     }
 
     public append(sm: SimpleMove) {
-        var newMove = new Move();
+        const newMove = new Move();
 
         newMove.parent = this.parent;
         newMove.varNo = this.varNo;
@@ -192,9 +194,11 @@ export class Move {
         newMove.next_move = this;
         newMove.prev_move = this.prev_move;
 
-        this.prev_move.next_move = newMove;
-        this.prev_move = newMove;
-
+        if (this.prev_move) {
+            this.prev_move.next_move = newMove;
+            this.prev_move = newMove;
+        }
+        
         newMove.next_move.ply = newMove.ply;
 
         return newMove;

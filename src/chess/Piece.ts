@@ -107,7 +107,7 @@ export class Piece {
      * Return uppercased piece char.
      */
     public static toUpperChar(p: number): string {
-        var pt = Piece.type(p);
+        const pt = Piece.type(p);
         switch (pt) {
             case Piece.King: return "K";
             case Piece.Queen: return "Q";

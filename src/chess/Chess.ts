@@ -119,14 +119,14 @@ enum ChessResultType {
     Draw = 3
 }
 
-var OppositeColor: ChessResultColor[] = [
+const OppositeColor: ChessResultColor[] = [
     ChessResultColor.None,
     ChessResultColor.Black,
     ChessResultColor.White,
     ChessResultColor.Draw
 ];
 
-var OppositeType: ChessResultType[] = [
+const OppositeType: ChessResultType[] = [
     ChessResultType.None,
     ChessResultType.Lose,
     ChessResultType.Win,
@@ -144,12 +144,12 @@ const resultLongStr: string[] = [ "*", "1-0", "0-1", "1/2-1/2" ];
 const resultHtmlStr: string[] = ["*", "1&ndash;0", "0&ndash;1", "&frac12;&ndash;&frac12;"];
 
 export class ChessGameState {
-    public InCheckMate: boolean;
-    public InStaleMate: boolean;
-    public IsNoMaterialWhite: boolean;
-    public IsNoMaterialBlack: boolean;
-    public IsPosRepeation: boolean;
-    public Is50MovesRule: boolean;
+    public InCheckMate: boolean = false;
+    public InStaleMate: boolean = false;
+    public IsNoMaterialWhite: boolean = false;
+    public IsNoMaterialBlack: boolean = false;
+    public IsPosRepeation: boolean = false;
+    public Is50MovesRule: boolean = false;
 }
 
 export interface IChessSettings {
@@ -163,52 +163,52 @@ export interface IChessSettings {
 
 export class Chess {
     private settings: IChessSettings;
-    private savedMove: Move;
-    private savedPos: Position;
-    private savedPlyCount: number;
+    private savedMove: Move | null = null;
+    private savedPos: Position | null = null;
+    private savedPlyCount: number = 0;
     private pgnLastMovePos: number;
     private pgnNextMovePos: number;
     private varDepth: number = 0;
     private supressEvents = false;
     private moveList: { [index: string]: Move } = {};
-    private currentMove: Move;
-    private currentPos: Position;
+    private currentMove!: Move;
+    private currentPos!: Position;
     private startPos: Position;
-    private startFen: string = FenString.fenStandartStart;
+    private startFen: string = FenString.standartStart;
 
     /**
      * Side to move in starting position
      */
-    public ToMove: number;
-    public NumHalfMoves: number;
-    public CurrentPlyCount: number;
-    public StartPlyCount: number;    
+    public ToMove: number = Color.White;
+    public NumHalfMoves: number = 0;
+    public CurrentPlyCount: number = 0;
+    public StartPlyCount: number = 0;    
     
     public Altered: boolean;
-    public InPromotion: boolean;
+    public InPromotion: boolean = false;
 
-    public Fen: string;
+    public Fen?: string;
     
     
     /// <summary>
     /// True if game has a promotion to R/B/N.
     /// </summary>
-    public NoQueenPromotion: boolean;
+    public NoQueenPromotion: boolean = false;
     public Tags: ChessTags;
     public GameId: number;
-    public White: IChessUser;
-    public Black: IChessUser;
-    public Event: string;
-    public Site: string;
-    public GameDate: string;
-    public EventDate: string;
-    public Round: string;
-    public WhiteElo: number;
-    public WhiteRatingType: ChessRatingType;
-    public BlackElo: number;
-    public BlackRatingType: ChessRatingType;
-    public EcoCode: string;
-    public Result: ChessResultColor;
+    public White?: IChessUser;
+    public Black?: IChessUser;
+    public Event?: string;
+    public Site?: string;
+    public GameDate?: string;
+    public EventDate?: string;
+    public Round?: string;
+    public WhiteElo?: number;
+    public WhiteRatingType?: ChessRatingType;
+    public BlackElo?: number;
+    public BlackRatingType?: ChessRatingType;
+    public EcoCode?: string;
+    public Result: ChessResultColor = ChessResultColor.None;
 
     /**
      * @constructor 
@@ -220,7 +220,7 @@ export class Chess {
         this.Altered = false;
         this.pgnLastMovePos = this.pgnNextMovePos = 0;
 
-        if (this.settings.fen && (this.settings.fen != FenString.fenStandartStart)) {
+        if (this.settings.fen && (this.settings.fen != FenString.standartStart)) {
             this.startFen = this.settings.fen;
             this.startPos = new Position(this.settings.fen);
         } else {
@@ -247,7 +247,7 @@ export class Chess {
     }
 
     public get NonStandardStart(): boolean {
-        return this.startFen !== FenString.fenStandartStart;
+        return this.startFen !== FenString.standartStart;
     }
 
     private clear() {
@@ -326,9 +326,9 @@ export class Chess {
             // 4 - comments
             // 5 - nag
             // 6 - variations
-            var mv = moves[i];
+            const mv = moves[i];
 
-            var sm = new SimpleMove();
+            const sm = new SimpleMove();
             sm.PlyCount = this.CurrentPos.PlyCount + 1;
             sm.From = mv[0] & 63;
             sm.To = (mv[0] >> 6) & 63;
@@ -341,25 +341,25 @@ export class Chess {
             sm.Nag = mv[5];
             sm.Permanent = true;
 
-            var move = this.addMove(sm, sm.San);
+            const move = this.addMove(sm, sm.San);
             this.moveList[move.moveKey] = move;
         }
     }
 
     private positionChanged() {
         if (!this.supressEvents) {
-            if (!this.CurrentMove.Fen) {
-                this.CurrentMove.Fen = FenString.fromPosition(this.currentPos);
+            if (!this.currentMove.Fen) {
+                this.currentMove.Fen = FenString.fromPosition(this.currentPos);
             }
 
-            this.Fen = this.CurrentMove.Fen;
+            this.Fen = this.currentMove.Fen;
         }
     }
 
     public checkGameState(): ChessGameState {
-        var state = new ChessGameState();
+        const state = new ChessGameState();
 
-        var mlist = this.currentPos.generateMoves(Piece.NoPiece, GenerateMode.All, true);
+        const mlist = this.currentPos.generateMoves(Piece.NoPiece, GenerateMode.All, true);
 
         if (mlist.length === 0) {
             if (this.currentPos.isKingInCheck()) {
@@ -399,9 +399,9 @@ export class Chess {
             }
         }
 
-        var move = this.CurrentMove.Prev;
-        var thisFen = move.Fen;
-        var rc = 1;
+        const move = this.currentMove.Prev!;
+        const thisFen = move.Fen;
+        let rc = 1;
         while (!move.START_MARKER) {
             if (thisFen === move.Fen) { 
                 rc++; 
@@ -416,7 +416,7 @@ export class Chess {
 
     public makeMove(fr: number, to: number, promote?: string) {
         const { currentPos } = this;
-        var sm = new SimpleMove();
+        const sm = new SimpleMove();
         sm.PieceNum = currentPos.getPieceNum(fr);
         sm.MovingPiece = currentPos.getPiece(fr);
         sm.Color = Piece.color(sm.MovingPiece);
@@ -428,12 +428,12 @@ export class Chess {
         sm.EpSquare = currentPos.EpTarget;
         sm.Promote = Piece.NoPiece;
         
-        var piece = sm.MovingPiece;
-        var ptype = Piece.type(piece);
-        var enemy = Color.flip(currentPos.WhoMove);
+        const piece = sm.MovingPiece;
+        const ptype = Piece.type(piece);
+        const enemy = Color.flip(currentPos.WhoMove);
 
         // handle promotion:
-        var promoteRank = (currentPos.WhoMove === Color.White ? 7 : 0);
+        const promoteRank = (currentPos.WhoMove === Color.White ? 7 : 0);
         if ((ptype == Piece.Pawn) && (Square.rank(to) == promoteRank)) {
             if (!promote) {
                 this.InPromotion = true;
@@ -445,7 +445,7 @@ export class Chess {
 
         // Handle en passant capture:
         if (ptype == Piece.Pawn && (sm.CapturedPiece == Piece.NoPiece) && (Square.fyle(fr) != Square.fyle(to))) {
-            var enemyPawn = Piece.create(enemy, Piece.Pawn);
+            const enemyPawn = Piece.create(enemy, Piece.Pawn);
             sm.CapturedSquare = (this.currentPos.WhoMove === Color.White ? (to - 8) : (to + 8));
             sm.CapturedPiece = enemyPawn;
         }
@@ -525,7 +525,7 @@ export class Chess {
             this.currentMove = this.moveList[key];
             this.currentPos = new Position(this.currentMove.Fen);
             this.CurrentPlyCount = this.currentPos.PlyCount; 
-            this.currentMove = this.currentMove.Next;
+            this.currentMove = this.currentMove.Next!;
         }
 
         this.supressEvents = false;
@@ -540,8 +540,8 @@ export class Chess {
             return false;
         }
 
-        this.currentPos.doSimpleMove(this.currentMove.moveData);
-        this.currentMove = this.currentMove.Next;
+        this.currentPos.doSimpleMove(this.currentMove.moveData!);
+        this.currentMove = this.currentMove.Next!;
         this.CurrentPlyCount++;
         this.positionChanged();
         
@@ -553,13 +553,13 @@ export class Chess {
     * @returns {Boolean}
     */
     public moveBackward() {
-        const prev = this.currentMove.Prev;
+        const prev = this.currentMove.Prev!;
         if (prev.START_MARKER) {
             return false;
         }
 
         this.currentMove = prev;
-        this.currentPos.undoSimpleMove(this.currentMove.moveData);
+        this.currentPos.undoSimpleMove(this.currentMove.moveData!);
         this.CurrentPlyCount--;
         this.positionChanged();
 

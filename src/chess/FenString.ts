@@ -74,8 +74,8 @@ export enum FenFormat {
  
 
 export class FenString {
-    public static fenStandartStart = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
-    public static fenEmptyBoard = fenEmptyBoardStd;
+    public static standartStart = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
+    public static emptyBoard = fenEmptyBoardStd;
 
     public static trim(fen: string, flag: FenFormat) {
         fen = normalizeFen(fen);

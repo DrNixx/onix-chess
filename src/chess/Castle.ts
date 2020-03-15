@@ -9,8 +9,8 @@ export class Castle {
     public static KSide: number = 1;
     public static K = 'O-O';
 
-    public static WQCastle = 1;
-    public static WKCastle = 2;
-    public static BQCastle = 4;
-    public static BKCastle = 8;
+    public static WQ = 1;
+    public static WK = 2;
+    public static BQ = 4;
+    public static BK = 8;
 }

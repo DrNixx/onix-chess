@@ -319,16 +319,16 @@ export class Square {
      * Also note that a square is adjacent to itself.
      */
     public static adjacent(from: number, to: number): boolean {
-        var fromRank = Square.rank(from);
-        var toRank = Square.rank(to);
-        var rdist = fromRank - toRank;
+        const fromRank = Square.rank(from);
+        const toRank = Square.rank(to);
+        const rdist = fromRank - toRank;
         if (rdist < -1 || rdist > 1) {
             return false;
         }
 
-        var fromFyle = Square.fyle(from);
-        var toFyle = Square.fyle(to);
-        var fdist = fromFyle - toFyle;
+        const fromFyle = Square.fyle(from);
+        const toFyle = Square.fyle(to);
+        const fdist = fromFyle - toFyle;
         if (fdist < -1 || fdist > 1) {
             return false;
         }
@@ -352,8 +352,8 @@ export class Square {
     }
 
     public static isKnightHop(from: number, to: number) {
-        var rdist = __rankFyleDist[(Square.rank(from) << 3) | Square.rank(to)];
-        var fdist = __rankFyleDist[(Square.fyle(from) << 3) | Square.fyle(to)];
+        const rdist = __rankFyleDist[(Square.rank(from) << 3) | Square.rank(to)];
+        const fdist = __rankFyleDist[(Square.fyle(from) << 3) | Square.fyle(to)];
         // it is a knight hop only if one distance is two squares and the
         // other is one square -- that is, only if their product equals two.
         return ((rdist * fdist) === 2);

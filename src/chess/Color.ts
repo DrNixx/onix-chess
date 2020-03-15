@@ -21,7 +21,7 @@ export class Color {
         return (1 - c);
     }
 
-    public static toName(c: number): ColorName {
+    public static toName(c: number): ColorName | undefined {
         switch (c) {
             case NO_COLOR:
                 return undefined;
