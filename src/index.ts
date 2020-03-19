@@ -1,6 +1,7 @@
 export { Intl } from './Intl';
-export { Color, ColorName } from './chess/Color';
-export { Castle } from './chess/Castle';
+export * from './chess/Types';
+export { Color } from './chess/Color';
+export { Castling, CastlingSide } from './chess/Castling';
 export { Piece } from './chess/Piece';
 export { Square } from './chess/Square';
 export { Move } from './chess/Move';

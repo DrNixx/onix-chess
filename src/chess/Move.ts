@@ -3,6 +3,7 @@ import { Color } from './Color';
 import { Piece } from './Piece';
 import { Square } from './Square';
 import { SimpleMove } from './SimpleMove';
+import { Squares, Colors, Pieces } from './Types';
 
 /**
  * Move in position
@@ -11,12 +12,12 @@ export class Move {
     private vars: Move[] = [];
     private varNo: number = 0;
     private ply: number;
-    private from: number;
-    private to: number;
-    private color: number;
-    private capturedSquare: number;
-    private capturedPiece: number;
-    private promote: number;
+    private from?: Squares.Square;
+    private to?: Squares.Square;
+    private color?: Colors.BW;
+    private capturedSquare?: Squares.Square;
+    private capturedPiece?: number;
+    private promote?: Pieces.PieceType;
     private piece_num: number;
     private permanent: boolean;
     private legal_moves: SimpleMove[];
@@ -32,7 +33,7 @@ export class Move {
     public id: number = 0;
     public moveData: SimpleMove | null;
     public Name: string;
-    public WhoMove: number;
+    public WhoMove: Colors.BW;
     public Comments: string;
     public Fen: string | undefined;
 
@@ -45,10 +46,10 @@ export class Move {
         this.moveData = null;
         this.from = Square.NullSquare;
         this.to = Square.NullSquare;
-        this.color = Color.NoColor;
+        this.color = Color.None;
         this.capturedSquare = Square.NullSquare;
-        this.capturedPiece = Piece.NoPiece;
-        this.promote = Piece.NoPiece;
+        this.capturedPiece = Piece.None;
+        this.promote = Piece.None;
         this.piece_num = 0;
         this.WhoMove = Color.White;
         this.ply = 0;

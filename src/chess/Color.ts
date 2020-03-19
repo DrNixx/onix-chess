@@ -1,34 +1,34 @@
-const WHITE = 0;
-const BLACK = 1;
-const NO_COLOR = 2;
+import { Colors } from './Types';
 
-export type ColorName = "white" | "black";
+// const lit = <V extends keyof any>(v: V) => v;
+// export type GameColor = (typeof Color)[keyof typeof Color];
 
-/**
- * Color
- */
-export class Color {
-    public static White: number = WHITE;
-    public static Black: number = BLACK;
-    public static NoColor: number = NO_COLOR;
+export namespace Color {
+    const white: Colors.White = 0;
+    const black: Colors.Black = 1;
+    const none: Colors.None = undefined;
 
-    public static WhiteChar: string = "w";
-    public static BlackChar: string = "b";
+    export const White: Colors.White = white;
+    export const Black: Colors.Black = black;
+    export const None: Colors.None = none;
 
-    public static Names = ["white", "black", "none"];
+    export const WhiteChar: Colors.Char = "w";
+    export const BlackChar: Colors.Char = "b";
 
-    public static flip(c: number): number {
-        return (1 - c);
+    export function isColor(c?: number): c is Colors.BW {
+        return (c !== none) && ((c === white) || (c === black));
     }
 
-    public static toName(c: number): ColorName | undefined {
+    export function flip(c: Colors.BW): Colors.BW {
+        return (1 - c) as Colors.BW;
+    }
+    
+    export function toName(c: Colors.BW): Colors.Name {
         switch (c) {
-            case NO_COLOR:
-                return undefined;
-            case BLACK:
-                return "black";
-            default:
+            case White:
                 return "white";
+            case Black:
+                return "black";
         }
-    }
+    }   
 }

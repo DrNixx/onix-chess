@@ -11,6 +11,7 @@ import { Move } from './Move';
 import { SimpleMove } from './SimpleMove';
 import { IChessUser } from '../app/IChessUser';
 import { FenString } from './FenString';
+import { Squares, Colors } from './Types';
 
 export enum ChessRatingType {
     None = 0,
@@ -161,6 +162,8 @@ export interface IChessSettings {
     moves?: any[]
 }
 
+type encodedMoves = [number, string, number, number, string, string];
+
 export class Chess {
     private settings: IChessSettings;
     private savedMove: Move | null = null;
@@ -179,7 +182,7 @@ export class Chess {
     /**
      * Side to move in starting position
      */
-    public ToMove: number = Color.White;
+    public ToMove: Colors.BW = Color.White;
     public NumHalfMoves: number = 0;
     public CurrentPlyCount: number = 0;
     public StartPlyCount: number = 0;    
@@ -317,7 +320,7 @@ export class Chess {
         this.ToMove = this.currentPos.WhoMove;
     }
 
-    private decodeMoves(moves: any[]) {
+    private decodeMoves(moves: encodedMoves[]) {
         for (let i = 0; i < moves.length; i++) {
             // 0 - from/to/color
             // 1 - san
@@ -330,13 +333,19 @@ export class Chess {
 
             const sm = new SimpleMove();
             sm.PlyCount = this.CurrentPos.PlyCount + 1;
-            sm.From = mv[0] & 63;
-            sm.To = (mv[0] >> 6) & 63;
-            sm.Color = (mv[0] >> 12) & 63;
-            sm.CapturedPiece = mv[2] & 63;
-            sm.CapturedSquare = (mv[2] >> 6) & 63;
+            const from = mv[0] & 63;
+            const to = (mv[0] >> 6) & 63;
+            const color = (mv[0] >> 12) & 63;
+            const capturedPiece = mv[2] & 63;
+            const capturedSquare = (mv[2] >> 6) & 63;
+
+            sm.From = Square.isSquare(from) ? from : Square.NullSquare;
+            sm.To = Square.isSquare(to) ? to : Square.NullSquare;;
+            sm.Color = Color.isColor(color) ? color : Color.None;
+            sm.CapturedPiece = Piece.isPiece(capturedPiece) ? capturedPiece : Piece.None;
+            sm.CapturedSquare = Square.isSquare(capturedSquare) ? capturedSquare : Square.NullSquare;
             sm.San = mv[1];
-            sm.Promote = mv[3];
+            sm.Promote = Piece.isPieceType(mv[3]) ? mv[3] : Piece.None;
             sm.Comments = mv[4];
             sm.Nag = mv[5];
             sm.Permanent = true;
@@ -359,7 +368,7 @@ export class Chess {
     public checkGameState(): ChessGameState {
         const state = new ChessGameState();
 
-        const mlist = this.currentPos.generateMoves(Piece.NoPiece, GenerateMode.All, true);
+        const mlist = this.currentPos.generateMoves(Piece.None, GenerateMode.All, true);
 
         if (mlist.length === 0) {
             if (this.currentPos.isKingInCheck()) {
@@ -414,19 +423,23 @@ export class Chess {
         return state;
     }
 
-    public makeMove(fr: number, to: number, promote?: string) {
+    public makeMove(fr: Squares.Square, to: Squares.Square, promote?: string) {
         const { currentPos } = this;
         const sm = new SimpleMove();
         sm.PieceNum = currentPos.getPieceNum(fr);
         sm.MovingPiece = currentPos.getPiece(fr);
+        if (!Piece.isPiece(sm.MovingPiece)) {
+            return;
+        }
+
         sm.Color = Piece.color(sm.MovingPiece);
         sm.From = fr;
         sm.To = to;
         sm.CapturedPiece = currentPos.getPiece(to);
         sm.CapturedSquare = to;
-        sm.CastleFlags = currentPos.Castling;
+        sm.CastleFlags = currentPos.Castling.Flag;
         sm.EpSquare = currentPos.EpTarget;
-        sm.Promote = Piece.NoPiece;
+        sm.Promote = Piece.None;
         
         const piece = sm.MovingPiece;
         const ptype = Piece.type(piece);
@@ -444,9 +457,9 @@ export class Chess {
         }
 
         // Handle en passant capture:
-        if (ptype == Piece.Pawn && (sm.CapturedPiece == Piece.NoPiece) && (Square.fyle(fr) != Square.fyle(to))) {
+        if (ptype == Piece.Pawn && (sm.CapturedPiece == Piece.None) && (Square.fyle(fr) != Square.fyle(to))) {
             const enemyPawn = Piece.create(enemy, Piece.Pawn);
-            sm.CapturedSquare = (this.currentPos.WhoMove === Color.White ? (to - 8) : (to + 8));
+            sm.CapturedSquare = (this.currentPos.WhoMove === Color.White ? (to - 8) as Squares.Square : (to + 8) as Squares.Square);
             sm.CapturedPiece = enemyPawn;
         }
 
@@ -533,7 +546,7 @@ export class Chess {
 
     /**
     * Переместить текущую позицию на 1 вперед
-    * @returns {Boolean}
+    * @returns Boolean
     */
     public moveForward() {
         if (this.currentMove.END_MARKER) {
@@ -550,7 +563,7 @@ export class Chess {
 
     /**
     * Move to 1 turn back
-    * @returns {Boolean}
+    * @returns Boolean
     */
     public moveBackward() {
         const prev = this.currentMove.Prev!;

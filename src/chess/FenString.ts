@@ -1,15 +1,15 @@
 import repeat from 'lodash-es/repeat';
 import toSafeInteger from 'lodash-es/toSafeInteger';
 import { Hashtable } from 'onix-core/dist/Hashtable';
+import { Colors, Squares, Pieces } from './Types';
 import { Piece } from './Piece';
 import { Position } from './Position';
 import { Square } from './Square';
 import { Color } from './Color';
-import { Castle } from './Castle';
+import { Castling, CastlingSide, CastlingStr } from './Castling';
 
 // Forsite to piece map
-const fenPieces: Hashtable<number> = {
-    "1": Piece.NoPiece,
+const fenPieces: Hashtable<Pieces.Piece> = {
     "P": Piece.WPawn,
     "K": Piece.WKing,
     "Q": Piece.WQueen,
@@ -26,7 +26,6 @@ const fenPieces: Hashtable<number> = {
 
 // Piece to Forsite map
 const FP_p2f: string[] = [];
-FP_p2f[Piece.NoPiece] = "1";
 FP_p2f[Piece.WPawn] = "P";
 FP_p2f[Piece.WKing] = "K";
 FP_p2f[Piece.WQueen] = "Q";
@@ -42,14 +41,14 @@ FP_p2f[Piece.BBishop] = "b";
 
 const fenEmptyBoardStd = "8/8/8/8/8/8/8/8 w KQkq - 0 1";
 
-function fen2Piece(fenCharacter: string): number
+function fen2Piece(fenCharacter: string): Pieces.Piece | Pieces.Empty
 {
-    return (fenPieces[fenCharacter]) ? fenPieces[fenCharacter] : Piece.NoPiece;
+    return (fenPieces[fenCharacter]) ? fenPieces[fenCharacter] : Piece.None;
 }
 
-function fenToSquare(sq: number): number
+function fenToSquare(sq: number): Squares.Square
 {
-    return ((7 - Math.floor(sq / 8)) * 8 + (sq % 8));
+    return ((7 - Math.floor(sq / 8)) * 8 + (sq % 8)) as Squares.Square;
 }
 
 function normalizeFen(fen: string): string {
@@ -69,9 +68,18 @@ export enum FenFormat {
     board = 0,
     color = 1,
     castlingEp = 2,
-    complete = 3,
+    complete = 3
 }
  
+export interface PositionDef {
+    board: string;
+    color: Colors.BW;
+    castling: Castling;
+    castlingSet: Boolean;
+    eptarget?: Squares.Square;
+    halfMoves: number;
+    moveNo: number;
+}
 
 export class FenString {
     public static standartStart = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
@@ -117,128 +125,134 @@ export class FenString {
         return result;
     }
 
-    public static toPosition(pos: Position, fen: string, forceCastling: boolean = true) {
+    public static toDefenition(fen: string): PositionDef {
+        const result: PositionDef = {
+            board: "8/8/8/8/8/8/8/8",
+            color: Color.White,
+            castling: new Castling(),
+            castlingSet: false,
+            eptarget: Square.NullSquare,
+            halfMoves: 0,
+            moveNo: 1
+        }
+
         fen = normalizeFen(fen);
 
         const tok = fen.split(/\s+/);
-        let board_text = String(tok[0]);
+        result.board = String(tok[0]);
+        
+        if (tok.length > 1) {
+            // now the side to move:
+            result.color = (tok[1] === "b") ? Color.Black : Color.White;
+        }
+        
+        if (tok.length > 2) {
+            result.castlingSet = result.castling.fromFen(tok[2]);
+        }
+
+        if (tok.length > 3) {
+            if (tok[3].charAt(0) !== "-") {
+                const fylec = tok[3].charAt(0);
+                if (fylec >= "a" && fylec <= "h") {
+                    const rankc = tok[3].charAt(1);
+                    if (rankc === "3" || rankc === "6") {
+                        const f = Square.fyleFromChar(fylec);
+                        const r = Square.rankFromChar(rankc);
+                        if (Square.isFyle(f) && Square.isRank(r)) {
+                            result.eptarget = Square.create(f, r);
+                        }        
+                    }
+                }
+            }
+        }
+
+        if (tok.length > 4) {
+            result.halfMoves = toSafeInteger(tok[4]);
+        }
+
+        if (tok.length > 5) {
+            const m = toSafeInteger(tok[5]);
+            if (m >= 1) {
+                result.moveNo = m;
+            }
+        }
+
+        return result;
+    }
+
+    public static toPosition(pos: Position, fen: string, forceCastling: boolean = true) {
+        const def = FenString.toDefenition(fen);
+        
         let i: number = 0;
         let sq: number = 0;
 
         // replace NOPIECE square with repeated "1" string
         for (i = 2; i <= 8; i++) {
             const re = new RegExp(String(i), "g");
-            board_text = board_text.replace(re,  repeat("1", i));
+            def.board = def.board.replace(re,  repeat("1", i));
         }
 
         // remove slashes
-        board_text = board_text.replace(/\//g, "");
-        if (board_text.length !== 64) {
+        def.board = def.board.replace(/\//g, "");
+        if (def.board.length !== 64) {
             return false;
         }
 
         pos.clear();
 
         for (sq = 0; sq < 64; sq++) {
-            const p = fen2Piece(board_text.charAt(sq));
-            if (p !== Piece.NoPiece) {
+            const p = fen2Piece(def.board.charAt(sq));
+            if (p !== Piece.None) {
                 pos.addPiece(p, fenToSquare(sq));
             }
         }
 
-        if (tok.length > 1) {
-            // now the side to move:
-            pos.WhoMove = (tok[1] === "b") ? Color.Black : Color.White;
+        pos.WhoMove = def.color;
+
+        pos.Castling.assign(def.castling);
+        if (!def.castlingSet && forceCastling) {
+            const board = pos.Board;
+            // the FEN has no castling field, so just guess that
+            // castling is possible whenever a king and rook are
+            // still on their starting squares:
+            if (board[4] === Piece.WKing) {
+                if (board[0] === Piece.WRook) {
+                    pos.Castling.set(Color.White, CastlingSide.Queen, true);
+                }
+
+                if (board[7] === Piece.WRook) {
+                    pos.Castling.set(Color.White, CastlingSide.King, true);
+                }
+            }
+            if (board[60] === Piece.BKing) {
+                if (board[56] === Piece.BRook) {
+                    pos.Castling.set(Color.Black, CastlingSide.Queen, true);
+                }
+
+                if (board[63] === Piece.BRook) {
+                    pos.Castling.set(Color.Black, CastlingSide.King, true);
+                }
+            }   
         }
         
-        const board = pos.Board;
-
-        pos.Castling = 0;
-        if ((tok.length > 2) || forceCastling) {
-            if (tok[2] === "-") {
-                // do nothing
-            } else if (!tok[2] || (tok[2] === " ")) {
-                // the FEN has no castling field, so just guess that
-                // castling is possible whenever a king and rook are
-                // still on their starting squares:
-                if (board[4] === Piece.WKing) {
-                    if (board[0] === Piece.WRook) {
-                        pos.setCastling(Color.White, Castle.QSide, true);
-                    }
-    
-                    if (board[7] === Piece.WRook) {
-                        pos.setCastling(Color.White, Castle.KSide, true);
-                    }
-                }
-                if (board[60] === Piece.BKing) {
-                    if (board[56] === Piece.BRook) {
-                        pos.setCastling(Color.Black, Castle.QSide, true);
-                    }
-    
-                    if (board[63] === Piece.BRook) {
-                        pos.setCastling(Color.Black, Castle.KSide, true);
-                    }
-                }
-            } else {
-                for (i = 0; i < tok[2].length; i++) {
-                    if (tok[2].charAt(i) === "K") {
-                        pos.setCastling(Color.White, Castle.KSide, true);
-                    }
-    
-                    if (tok[2].charAt(i) === "Q") {
-                        pos.setCastling(Color.White, Castle.QSide, true);
-                    }
-    
-                    if (tok[2].charAt(i) === "k") {
-                        pos.setCastling(Color.Black, Castle.KSide, true);
-                    }
-    
-                    if (tok[2].charAt(i) === "q") {
-                        pos.setCastling(Color.Black, Castle.QSide, true);
-                    }
-                }
-            }    
-        }
-        
-        if (tok.length > 3) {
-            if (tok[3].charAt(0) === "-") {
-                pos.EpTarget = Square.NullSquare;
-            } else {
-                const fylec = tok[3].charAt(0);
-                if (fylec < "a" || fylec > "h") {
-                    return false;
-                }
-                const rankc = tok[3].charAt(1);
-                if (rankc !== "3" && rankc !== "6") {
-                    return false;
-                }
-                pos.EpTarget = Square.create(Square.fyleFromChar(fylec), Square.rankFromChar(rankc));
-            }
-        }
-
-        pos.HalfMoveCount = (tok.length > 4) ? toSafeInteger(tok[4]) : 0;
-
-        if (tok.length > 5) {
-            i = toSafeInteger(tok[5]);
-            if (i >= 1) {
-                pos.setMoveNo(i);
-            }
-        }
+        pos.EpTarget = def.eptarget;
+        pos.HalfMoveCount = def.halfMoves;
+        pos.setMoveNo(def.moveNo);
 
         return true;
     }
 
     public static fromPosition(pos: Position, flag: FenFormat = FenFormat.complete) {
         let fen = "";
-        let pB: number;
+        let pB: Pieces.Piece | Pieces.Empty;
 
         const board = pos.Board;
         for (let rank = 7; rank >= 0; rank--) {
             let NOPIECERun = 0;
             if (rank !== 7) { fen += "/"; }
-            for (let fyle = 0; fyle <= 7; fyle++) {
-                pB = board[Square.create(fyle, rank)];
-                if (pB !== Piece.NoPiece) {
+            for (let fyle: Squares.Fyle = 0; fyle <= 7; fyle++) {
+                pB = board[Square.create(fyle as Squares.Fyle, rank as Squares.Rank)];
+                if (pB !== Piece.None) {
                     if (NOPIECERun > 0) { fen += NOPIECERun.toString(); }
                     NOPIECERun = 0;
                     fen += FP_p2f[pB];
@@ -253,32 +267,13 @@ export class FenString {
             fen += (pos.WhoMove == Color.Black ? " b" : " w");
 
             if (flag >= FenFormat.castlingEp) {
-                if (pos.Castling === 0) {
-                    fen += " -";
-                } else {
-                    fen += " ";
-                    if (pos.getCastling(Color.White, Castle.KSide)) {
-                        fen += "K";
-                    }
-        
-                    if (pos.getCastling(Color.White, Castle.QSide)) {
-                        fen += "Q";
-                    }
-        
-                    if (pos.getCastling(Color.Black, Castle.KSide)) {
-                        fen += "k";
-                    }
-        
-                    if (pos.getCastling(Color.Black, Castle.QSide)) {
-                        fen += "q";
-                    }
-                }
+                fen += " " + pos.Castling.asFen();
         
                 if (pos.EpTarget === Square.NullSquare) {
                     fen += " -";
                 } else {
                     fen += " ";
-                    fen += Square.squareName(pos.EpTarget);
+                    fen += Square.name(pos.EpTarget);
                 }
 
                 if (flag >= FenFormat.complete) {
