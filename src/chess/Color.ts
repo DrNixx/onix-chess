@@ -30,7 +30,16 @@ export namespace Color {
             case Black:
                 return "black";
         }
-    }   
+    }
+
+    export function fromName(c: Colors.Name): Colors.BW {
+        switch (c) {
+            case "white":
+                return White;
+            case "black":
+                return Black;
+        }
+    }
 
     export function toChar(c: Colors.BW): Colors.Char {
         switch (c) {
