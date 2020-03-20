@@ -94,7 +94,7 @@ export class FenString {
         if (flag >= FenFormat.color) {
             if (tok.length > 1) {
                 //  color
-                result += Color.isChar(tok[1]) ? tok[1] : "w";
+                result += " " + (Color.isChar(tok[1]) ? tok[1] : "w");
 
                 if (flag >= FenFormat.castlingEp) {
                     if (tok.length > 2) {
@@ -264,7 +264,7 @@ export class FenString {
         }
 
         if (flag >= FenFormat.color) {
-            fen += Color.toChar(pos.WhoMove);
+            fen += " " + Color.toChar(pos.WhoMove);
 
             if (flag >= FenFormat.castlingEp) {
                 fen += " " + pos.Castling.asFen();
