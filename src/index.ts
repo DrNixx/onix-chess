@@ -1,7 +1,7 @@
 export { Intl } from './Intl';
 export * from './chess/Types';
 export { Color } from './chess/Color';
-export { Castling, CastlingSide } from './chess/Castling';
+export { CastlingStr, Castling, CastlingSide } from './chess/Castling';
 export { Piece } from './chess/Piece';
 export { Square } from './chess/Square';
 export { Move } from './chess/Move';
