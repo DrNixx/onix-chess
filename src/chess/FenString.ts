@@ -94,7 +94,7 @@ export class FenString {
         if (flag >= FenFormat.color) {
             if (tok.length > 1) {
                 //  color
-                result += (tok[1] === "b") ? " b" : " w";
+                result += Color.isChar(tok[1]) ? tok[1] : "w";
 
                 if (flag >= FenFormat.castlingEp) {
                     if (tok.length > 2) {
@@ -143,7 +143,7 @@ export class FenString {
         
         if (tok.length > 1) {
             // now the side to move:
-            result.color = (tok[1] === "b") ? Color.Black : Color.White;
+            result.color = Color.isChar(tok[1]) ? Color.fromChar(tok[1]) : Color.White;
         }
         
         if (tok.length > 2) {
@@ -264,7 +264,7 @@ export class FenString {
         }
 
         if (flag >= FenFormat.color) {
-            fen += (pos.WhoMove == Color.Black ? " b" : " w");
+            fen += Color.toChar(pos.WhoMove);
 
             if (flag >= FenFormat.castlingEp) {
                 fen += " " + pos.Castling.asFen();
