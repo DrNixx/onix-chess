@@ -23,15 +23,15 @@ export namespace Color {
         return (1 - c) as Colors.BW;
     }
 
-    export function isBW(c: number): c is Colors.BW {
+    export function isBW(c?: number): c is Colors.BW {
         return c === White || c === Black;
     }
 
-    export function isName(c: string): c is Colors.Name {
+    export function isName(c?: string): c is Colors.Name {
         return c === "white" || c === "black";
     }
 
-    export function isChar(c: string): c is Colors.Char {
+    export function isChar(c?: string): c is Colors.Char {
         return c === "w" || c === "b";
     }
     
