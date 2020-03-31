@@ -1,52 +1,15 @@
-import { Intl as IntlCore } from 'onix-core';
+import { Intl as i18n } from 'onix-core';
+import * as enTranslation from './i18n/en-us.json';
+import * as ruTranslation from './i18n/ru-ru.json';
 
-export class Intl {
-    private static intlInitialized = false;
+let initialized = false;
+export const register = () => {
+    if (!initialized) {
+        i18n.registerCategories("en-us", enTranslation);
+        i18n.registerCategories("ru-ru", ruTranslation);
 
-    public static register() {
-        if (!Intl.intlInitialized) {
-            IntlCore.register();
-
-            IntlCore.registerStrings('chess', {
-                'ru-ru': {
-                    fen: "FEN",
-                    pieces: "Фигуры",
-                    squares: "Доска",
-                    who_move: "Очередь хода",
-                    white: "Белые",
-                    black: "Черные",
-                    white_move: "Ход белых",
-                    black_move: "Ход черных",
-                    move_no: "№ хода",
-                    ep_target: "e.p.",
-                    castle: "Рокировка",
-                    firstMove: "Первый ход",
-                    prevMove: "Предыдущий ход",
-                    nextMove: "Следующий ход",
-                    lastMove: "Последний ход",
-                },
-
-                'en-us': {
-                    fen: "FEN",
-                    pieces: "Pieces",
-                    squares: "Board",
-                    who_move: "Who move",
-                    white: "White",
-                    black: "Black",
-                    white_move: "White move",
-                    black_move: "Black move",
-                    move_no: "Move no",
-                    ep_target: "e.p.",
-                    castle: "Castle",
-                    firstMove: "First move",
-                    prevMove: " Prev move",
-                    nextMove: "Next move",
-                    lastMove: "Last move",
-                }
-            });
-
-            Intl.intlInitialized = true;
-        }
+        initialized = true;
     }
 }
 
+register();

@@ -1,0 +1,19 @@
+{
+    "chess": {
+        "fen": "FEN",
+        "pieces": "Pieces",
+        "squares": "Board",
+        "who_move": "Who move",
+        "white": "White",
+        "black": "Black",
+        "white_move": "White move",
+        "black_move": "Black move",
+        "move_no": "Move no",
+        "ep_target": "e.p.",
+        "castle": "Castle",
+        "firstMove": "First move",
+        "prevMove": " Prev move",
+        "nextMove": "Next move",
+        "lastMove": "Last move",
+    }
+}

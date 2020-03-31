@@ -1,0 +1,19 @@
+{
+    "chess": {
+        "fen": "FEN",
+        "pieces": "Фигуры",
+        "squares": "Доска",
+        "who_move": "Очередь хода",
+        "white": "Белые",
+        "black": "Черные",
+        "white_move": "Ход белых",
+        "black_move": "Ход черных",
+        "move_no": "№ хода",
+        "ep_target": "e.p.",
+        "castle": "Рокировка",
+        "firstMove": "Первый ход",
+        "prevMove": "Предыдущий ход",
+        "nextMove": "Следующий ход",
+        "lastMove": "Последний ход",
+    }
+}

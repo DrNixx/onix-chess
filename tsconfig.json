@@ -12,6 +12,7 @@
         "noImplicitThis": true,
         "noUnusedParameters": true,
         "strictNullChecks": true,
+        "resolveJsonModule": true,
         "importHelpers": true,
         "preserveConstEnums": true,
         "removeComments": false,
