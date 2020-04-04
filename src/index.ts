@@ -1,4 +1,4 @@
-export { register } from './Intl';
+export { register } from './i18n';
 export * from './chess/Types';
 export { Color } from './chess/Color';
 export { CastlingStr, Castling, CastlingSide } from './chess/Castling';
