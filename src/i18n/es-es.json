@@ -1,0 +1,19 @@
+{
+    "chess": {
+        "fen": "FEN",
+        "pieces": "Piezas",
+        "squares": "Tablero",
+        "who_move": "Que se mueven",
+        "white": "Blanco",
+        "black": "Negro",
+        "white_move": "Las blancas mueven",
+        "black_move": "Las negros mueven",
+        "move_no": "Jugada número",
+        "ep_target": "e.p.",
+        "castle": "Enroque",
+        "firstMove": "Primer movimiento",
+        "prevMove": "Previo movimiento",
+        "nextMove": "Próximo movimiento",
+        "lastMove": "Último movimiento"
+    }
+}
