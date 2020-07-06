@@ -1,4 +1,4 @@
-import { Directions, Squares } from './Types'
+import { Directions, Squares } from '../types/Types'
 
 export namespace Direction {
     const ns: Squares.Empty = undefined;

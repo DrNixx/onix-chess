@@ -1,5 +1,5 @@
 import * as assert from 'assert';
-import { Colors, Squares, Directions } from './Types';
+import { Colors, Squares, Directions } from '../types/Types';
 import { Color } from './Color';
 import { Direction } from './Direction';
 

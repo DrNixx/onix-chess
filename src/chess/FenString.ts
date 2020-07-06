@@ -1,7 +1,7 @@
 import repeat from 'lodash-es/repeat';
 import toSafeInteger from 'lodash-es/toSafeInteger';
 import { Hashtable } from 'onix-core/dist/Hashtable';
-import { Colors, Squares, Pieces } from './Types';
+import { Colors, Squares, Pieces } from '../types/Types';
 import { Piece } from './Piece';
 import { Position } from './Position';
 import { Square } from './Square';

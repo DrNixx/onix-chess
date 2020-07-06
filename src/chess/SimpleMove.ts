@@ -1,4 +1,4 @@
-import { Colors, Pieces, Squares } from './Types';
+import { Colors, Pieces, Squares } from '../types/Types';
 import { Color } from './Color';
 import { Piece } from './Piece';
 import { Square } from './Square';

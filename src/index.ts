@@ -1,5 +1,7 @@
 export { register as i18nRegister } from './i18n';
-export * from './chess/Types';
+export * from './types/Types';
+export * from './types/Interfaces';
+export * from './actions/ChessActions';
 export { Color } from './chess/Color';
 export { CastlingStr, Castling, CastlingSide } from './chess/Castling';
 export { Piece } from './chess/Piece';
@@ -8,5 +10,5 @@ export { Move } from './chess/Move';
 export { SimpleMove } from './chess/SimpleMove';
 export { FenString, FenFormat } from './chess/FenString';
 export { Position } from './chess/Position';
-export { IOpeningPosition } from './chess/IOpeningPosition';
+export { IOpeningPosition } from './types/IOpeningPosition';
 export { Chess } from './chess/Chess';

@@ -9,9 +9,9 @@ import { Square } from './Square';
 import { Position, ChessPositionStd, SanCheckLevel, GenerateMode } from './Position';
 import { Move } from './Move';
 import { SimpleMove } from './SimpleMove';
-import { IChessUser } from '../app/IChessUser';
+import { IChessUser } from '../types/Interfaces';
 import { FenString } from './FenString';
-import { Squares, Colors } from './Types';
+import { Squares, Colors } from '../types/Types';
 
 export enum ChessRatingType {
     None = 0,
@@ -269,8 +269,8 @@ export class Chess {
     /// Clears all of the standard tags.
     /// </summary>
     private clearStandardTags () {
-        this.White = { userId: 0, name: "?"};
-        this.Black = { userId: 0, name: "?"};
+        this.White = { id: 0, username: "?"};
+        this.Black = { id: 0, username: "?"};
         this.Event = "?";
         this.Site = "?";
         this.Round = "?";

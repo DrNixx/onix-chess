@@ -1,4 +1,4 @@
-import { Colors } from './Types';
+import { Colors } from '../types/Types';
 
 // const lit = <V extends keyof any>(v: V) => v;
 // export type GameColor = (typeof Color)[keyof typeof Color];

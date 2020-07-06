@@ -1,5 +1,5 @@
 import * as assert from 'assert';
-import { Pieces, Colors } from './Types';
+import { Pieces, Colors } from '../types/Types';
 import { Color } from './Color';
 
 /**

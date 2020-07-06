@@ -1,5 +1,5 @@
 import { Color } from './Color';
-import { Colors } from './Types';
+import { Colors } from '../types/Types';
 
 class CastlingStrBrand {
     private _brand = 0;

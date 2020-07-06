@@ -3,7 +3,7 @@ import { Color } from './Color';
 import { Piece } from './Piece';
 import { Square } from './Square';
 import { SimpleMove } from './SimpleMove';
-import { Squares, Colors, Pieces } from './Types';
+import { Squares, Colors, Pieces } from '../types/Types';
 
 /**
  * Move in position
