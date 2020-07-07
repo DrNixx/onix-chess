@@ -30,7 +30,7 @@ export class Move {
     public END_MARKER: boolean;
 
     public uid: string;
-    public id: number = 0;
+    public id: string = "0";
     public moveData: SimpleMove | null;
     public Name: string;
     public WhoMove: Colors.BW;

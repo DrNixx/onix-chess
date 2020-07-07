@@ -9,7 +9,7 @@ import { Square } from './Square';
 import { Position, ChessPositionStd, SanCheckLevel, GenerateMode } from './Position';
 import { Move } from './Move';
 import { SimpleMove } from './SimpleMove';
-import { IChessUser } from '../types/Interfaces';
+import { IChessUser, IChessGame, IGameData, IMovePart, ITreePart } from '../types/Interfaces';
 import { FenString } from './FenString';
 import { Squares, Colors } from '../types/Types';
 
@@ -153,19 +153,34 @@ export class ChessGameState {
     public Is50MovesRule: boolean = false;
 }
 
-export interface IChessSettings {
-    id?: number,
-    my_color?: string,
-    white?: IChessUser,
-    black?: IChessUser,
-    fen?: string,
-    moves?: any[]
-}
-
 type encodedMoves = [number, string, number, number, string, string];
 
+const defaultGameData: IGameData = {
+    game: {
+        id: 0,
+        load: false,
+        insite: false,
+        variant: {
+            key: "standard",
+            name: "Standard",
+            shortName: "Std"
+        },
+        speed: "correspondence",
+        rated: false,
+        initialFen: "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+        player: "white",
+        turns: 0,
+        startedAtTurn: 0,
+        status: {
+            name: "noStart"
+        },
+    },
+    
+    orientation: "white"
+};
+
 export class Chess {
-    private settings: IChessSettings;
+    private data: IGameData;
     private savedMove: Move | null = null;
     private savedPos: Position | null = null;
     private savedPlyCount: number = 0;
@@ -198,7 +213,7 @@ export class Chess {
     /// </summary>
     public NoQueenPromotion: boolean = false;
     public Tags: ChessTags;
-    public GameId: number;
+    public GameId: number = 0;
     public White?: IChessUser;
     public Black?: IChessUser;
     public Event?: string;
@@ -216,24 +231,29 @@ export class Chess {
     /**
      * @constructor 
      */
-    constructor(settings?: IChessSettings) {
-        this.settings = settings || {};
+    constructor(data?: IGameData) {
+        this.data = data || defaultGameData;
 
         this.Tags = new ChessTags(this);
         this.Altered = false;
         this.pgnLastMovePos = this.pgnNextMovePos = 0;
 
-        if (this.settings.fen && (this.settings.fen != FenString.standartStart)) {
-            this.startFen = this.settings.fen;
-            this.startPos = new Position(this.settings.fen);
-        } else {
-            this.startPos = ChessPositionStd;
+        this.startPos = ChessPositionStd;
+        
+        if (this.data.game) {
+            const game = this.data.game;
+            if (game.initialFen != FenString.standartStart) {
+                this.startFen = game.initialFen;
+                this.startPos = new Position(game.initialFen);
+            } else {
+                this.startPos = ChessPositionStd;
+            }
+
+            this.clear();
+
+            this.GameId = this.data.game.id;
         }
 
-        this.clear();
-
-        this.GameId = this.settings.id || 0;
-        
         this.positionChanged();
     }
 
@@ -309,8 +329,8 @@ export class Chess {
         this.currentPos = new Position();
         this.currentPos.copyFrom(this.startPos);
         this.StartPlyCount = this.currentPos.PlyCount;
-        
-        const { moves } = this.settings;
+
+        const moves = this.data.steps || this.data.treeParts;
         if (moves) {
             this.supressEvents = true;
             this.decodeMoves(moves);
@@ -320,38 +340,35 @@ export class Chess {
         this.ToMove = this.currentPos.WhoMove;
     }
 
-    private decodeMoves(moves: encodedMoves[]) {
+    private instanceOfTreePart(object: IMovePart|ITreePart): object is ITreePart {
+        return 'eval' in object;
+    }
+
+    private decodeMoves(moves: IMovePart[]|ITreePart[]) {
         for (let i = 0; i < moves.length; i++) {
-            // 0 - from/to/color
-            // 1 - san
-            // 2 - captured
-            // 3 - promote
-            // 4 - comments
-            // 5 - nag
-            // 6 - variations
             const mv = moves[i];
+            if (mv.uci === undefined) {
+                continue;
+            }
 
-            const sm = new SimpleMove();
-            sm.PlyCount = this.CurrentPos.PlyCount + 1;
-            const from = mv[0] & 63;
-            const to = (mv[0] >> 6) & 63;
-            const color = (mv[0] >> 12) & 63;
-            const capturedPiece = mv[2] & 63;
-            const capturedSquare = (mv[2] >> 6) & 63;
+            const sm = this.currentPos.readCoordMove(mv.uci);
+            if (sm !== null) {
+                sm.PlyCount = this.CurrentPos.PlyCount + 1;
+            
+                sm.San = mv.san;
+                if (this.instanceOfTreePart(mv)) {
+                    if (mv.comments && (mv.comments.length > 0)) {
+                        sm.Comments = mv.comments[0].comment; 
+                    }
+                    // sm.Nag = mv[5];
+                }
+                
+                sm.Permanent = true;
 
-            sm.From = Square.isSquare(from) ? from : Square.NullSquare;
-            sm.To = Square.isSquare(to) ? to : Square.NullSquare;;
-            sm.Color = Color.isColor(color) ? color : Color.None;
-            sm.CapturedPiece = Piece.isPiece(capturedPiece) ? capturedPiece : Piece.None;
-            sm.CapturedSquare = Square.isSquare(capturedSquare) ? capturedSquare : Square.NullSquare;
-            sm.San = mv[1];
-            sm.Promote = Piece.isPieceType(mv[3]) ? mv[3] : Piece.None;
-            sm.Comments = mv[4];
-            sm.Nag = mv[5];
-            sm.Permanent = true;
-
-            const move = this.addMove(sm, sm.San);
-            this.moveList[move.moveKey] = move;
+                const move = this.addMove(sm, sm.San, mv.fen);
+                move.id = mv.id || "0";
+                this.moveList[move.moveKey] = move;
+            }
         }
     }
 
@@ -471,7 +488,7 @@ export class Chess {
     * @param sm SimpleMove
     * @param san String
     */
-    public addMove(sm: SimpleMove, san?: string) {
+    public addMove(sm: SimpleMove, san?: string, fen?: string) {
         const { currentPos } = this;
 
         // We must be at the end of a game/variation to add a move:
@@ -491,7 +508,10 @@ export class Chess {
         const newMove = this.currentMove.append(sm);
 
         this.currentPos.doSimpleMove(sm);
-        newMove.Fen = FenString.fromPosition(currentPos);
+        if (!fen) {
+            fen = FenString.fromPosition(currentPos);
+        }
+        newMove.Fen = fen;
         this.CurrentPlyCount++;
 
         if (!this.varDepth) {

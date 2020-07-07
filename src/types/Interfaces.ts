@@ -26,8 +26,8 @@ export type StatusName = 'started' | 'aborted' | 'mate' | 'resign' |
 
 export interface IGameStatus {
     name: StatusName;
-    result: number;
-    result_name: string;
+    result?: number;
+    result_name?: string;
 }
 
 export type PerfNameType = 
@@ -48,23 +48,23 @@ export interface IChessGame {
     insite: boolean;
     variant: IChessVariant;
     speed: 'correspondence' | 'classical' | SpeedNameType;
-    perf: PerfNameType;
-    rated: boolean;
+    perf?: PerfNameType;
+    rated?: boolean;
     initialFen: string;
-    fen: string;
+    fen?: string;
     player: Colors.Name;
     turns: number;
     startedAtTurn: number;
     status: IGameStatus;
-    event: string;
+    event?: string;
     tournamentId?: number;
-    createdAt: number;
-    private: boolean;
-    advance: boolean;
+    createdAt?: number;
+    private?: boolean;
+    advance?: boolean;
     winner?: Colors.Name;
     lastMove?: string;
     check?: string;
-    moveCentis: number[];
+    moveCentis?: number[];
     opening?: IChessOpening;
 }
 
@@ -178,11 +178,11 @@ export interface ITreePart extends IMovePart {
 }
 
 export interface IGameData {
-    game: IChessGame;
+    game?: IChessGame;
     tournament?: IChessTournament;
     clock?: IBlitzClock;
     correspondence?: ICorrespondenceClock | IAdvanceClock;
-    player: IChessPlayer;
+    player?: IChessPlayer;
     opponent?: IChessPlayer; 
     orientation: Colors.Name;
     analysis?: IGameAnalysis;

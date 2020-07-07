@@ -24,12 +24,12 @@ export class SimpleMove {
     public OldHalfMoveClock = 0;
 
     public PlyCount = 0;
-    public San: string = "";
-    public Comments: string = "";
-    public Nag: string = "";
+    public San?: string;
+    public Comments?: string;
+    public Nag?: string;
     public Permanent: boolean = true;
 
     public toString(): string {
-        return this.San;
+        return this.San || "";
     }
 }
