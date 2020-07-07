@@ -4,6 +4,7 @@ import { Piece } from './Piece';
 import { Square } from './Square';
 import { SimpleMove } from './SimpleMove';
 import { Squares, Colors, Pieces } from '../types/Types';
+import { ITreePart, IMovePart } from '../types/Interfaces';
 
 /**
  * Move in position
@@ -12,15 +13,6 @@ export class Move {
     private vars: Move[] = [];
     private varNo: number = 0;
     private ply: number;
-    private from?: Squares.Square;
-    private to?: Squares.Square;
-    private color?: Colors.BW;
-    private capturedSquare?: Squares.Square;
-    private capturedPiece?: number;
-    private promote?: Pieces.PieceType;
-    private piece_num: number;
-    private permanent: boolean;
-    private legal_moves: SimpleMove[];
     private parent: Move | null = null;
     
     private prev_move: Move | null;
@@ -31,47 +23,40 @@ export class Move {
 
     public uid: string;
     public id: string = "0";
-    public moveData: SimpleMove | null;
-    public Name: string;
-    public WhoMove: Colors.BW;
-    public Comments: string;
-    public Fen: string | undefined;
+    public name: string;
+    public whoMove: Colors.BW;
+    public comments: string;
+    public fen: string | undefined;
+
+    public sm: SimpleMove | null;
+    public data?: ITreePart | IMovePart;
 
     /**
      * @constructor
      */
     constructor() {
         this.uid = shortid.generate();
-        this.Name = "";
-        this.moveData = null;
-        this.from = Square.NullSquare;
-        this.to = Square.NullSquare;
-        this.color = Color.None;
-        this.capturedSquare = Square.NullSquare;
-        this.capturedPiece = Piece.None;
-        this.promote = Piece.None;
-        this.piece_num = 0;
-        this.WhoMove = Color.White;
+        this.name = "";
+        this.sm = null;
+        this.whoMove = Color.White;
         this.ply = 0;
-        this.Comments = "";
-        this.permanent = true;
+        this.comments = "";
         this.START_MARKER = false;
         this.END_MARKER = false;
         this.prev_move = null;
         this.next_move = null;
-        this.legal_moves = [];
     }
 
     public static init(fen?: string, parent?: Move | null): Move {
         const firstMove = new Move();
-        firstMove.Name = "FirstMove";
-        firstMove.Fen = fen;
+        firstMove.name = "FirstMove";
+        firstMove.fen = fen;
         firstMove.ply = 0;
         firstMove.START_MARKER = true;
         firstMove.END_MARKER = false;
 
         firstMove.next_move = new Move();
-        firstMove.next_move.Name = "LastMove";
+        firstMove.next_move.name = "LastMove";
         firstMove.next_move.ply = 0;
         firstMove.next_move.START_MARKER = false;
         firstMove.next_move.END_MARKER = true;
@@ -147,7 +132,7 @@ export class Move {
         if (!this.START_MARKER) {
             const prev = this.Prev;
             if (prev) {
-                varRoot = Move.init(prev.Fen, prev);
+                varRoot = Move.init(prev.fen, prev);
                 prev.vars.push(varRoot);
             }
         }
@@ -188,9 +173,9 @@ export class Move {
 
         newMove.parent = this.parent;
         newMove.varNo = this.varNo;
-        newMove.moveData = sm;
-        newMove.Name = sm.San ? sm.San : sm.PlyCount.toString();
-        newMove.ply = sm.PlyCount;
+        newMove.sm = sm;
+        newMove.name = sm.san ? sm.san : sm.plyCount.toString();
+        newMove.ply = sm.plyCount;
 
         newMove.next_move = this;
         newMove.prev_move = this.prev_move;

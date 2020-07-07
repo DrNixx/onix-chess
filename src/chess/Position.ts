@@ -295,59 +295,59 @@ export class Position {
      * @param sm {SimpleMove}
      */
     public doSimpleMove(sm: SimpleMove): void {
-        const from = Square.notEmpty(sm.From);
-        const to = Square.notEmpty(sm.To);
+        const from = Square.notEmpty(sm.from);
+        const to = Square.notEmpty(sm.to);
         let piece = Piece.notEmpty(this.brd[from]);
 
         const ptype = Piece.type(piece);
         const enemy = Color.flip(this.wm);
 
-        sm.PieceNum = this.listPos[from];
-        sm.CapturedPiece = this.brd[to];
-        sm.CapturedSquare = to;
-        sm.CastleFlags = this.castling.Flag;
-        sm.EpSquare = this.EpTarget;
-        sm.OldHalfMoveClock = this.HalfMoveCount;
+        sm.pieceNum = this.listPos[from];
+        sm.capturedPiece = this.brd[to];
+        sm.capturedSquare = to;
+        sm.castleFlags = this.castling.Flag;
+        sm.epSquare = this.EpTarget;
+        sm.oldHalfMoveClock = this.HalfMoveCount;
 
         this.HalfMoveCount++;
         this.plyCnt++;
 
         // handle enpassant capture:
         if ((ptype === Piece.Pawn) &&
-            (sm.CapturedPiece === noPiece) &&
+            (sm.capturedPiece === noPiece) &&
             (Square.fyle(from) !== Square.fyle(to))) {
             // this was an EP capture. We do not need to check it was a capture
             // since if a pawn lands on EPTarget it must capture to get there.
             const enemyPawn = Piece.create(enemy, Piece.Pawn);
-            sm.CapturedSquare = (this.wm === Color.White ? (to - 8) as Squares.Square : (to + 8)) as Squares.Square;
-            sm.CapturedPiece = enemyPawn;
+            sm.capturedSquare = (this.wm === Color.White ? (to - 8) as Squares.Square : (to + 8)) as Squares.Square;
+            sm.capturedPiece = enemyPawn;
         }
 
         // handle captures:
-        if (Piece.isPiece(sm.CapturedPiece) && Square.isSquare(sm.CapturedSquare)) {
-            sm.CapturedNum = this.listPos[sm.CapturedSquare];
+        if (Piece.isPiece(sm.capturedPiece) && Square.isSquare(sm.capturedSquare)) {
+            sm.capturedNum = this.listPos[sm.capturedSquare];
             // update opponents List of pieces
             this.pieceCount[enemy]--;
-            this.listPos[this.list[enemy][this.pieceCount[enemy]]] = sm.CapturedNum;
-            this.list[enemy][sm.CapturedNum] = this.list[enemy][this.pieceCount[enemy]];
-            this.material[sm.CapturedPiece]--;
+            this.listPos[this.list[enemy][this.pieceCount[enemy]]] = sm.capturedNum;
+            this.list[enemy][sm.capturedNum] = this.list[enemy][this.pieceCount[enemy]];
+            this.material[sm.capturedPiece]--;
             this.HalfMoveCount = 0;
-            this.removeFromBoard(sm.CapturedPiece, sm.CapturedSquare);
-            this.capt[this.plyCnt] = sm.CapturedPiece;
+            this.removeFromBoard(sm.capturedPiece, sm.capturedSquare);
+            this.capt[this.plyCnt] = sm.capturedPiece;
         }
 
         // handle promotion:
-        if (sm.Promote !== noPiece) {
+        if (sm.promote !== noPiece) {
             this.material[piece]--;
             this.removeFromBoard(piece, from);
-            piece = Piece.create(this.wm, sm.Promote);
+            piece = Piece.create(this.wm, sm.promote);
             this.material[piece]++;
             this.addToBoard(piece, from);
         }
 
         // now make the move:
-        this.list[this.wm][sm.PieceNum] = to;
-        this.listPos[to] = sm.PieceNum;
+        this.list[this.wm][sm.pieceNum] = to;
+        this.listPos[to] = sm.pieceNum;
         this.removeFromBoard(piece, from);
         this.addToBoard(piece, to);
 
@@ -428,33 +428,33 @@ export class Position {
      * @param sm {SimpleMove}
      */
     public undoSimpleMove(sm: SimpleMove) {
-        const from = Square.notEmpty(sm.From);
-        const to = Square.notEmpty(sm.To);
+        const from = Square.notEmpty(sm.from);
+        const to = Square.notEmpty(sm.to);
         let piece = Piece.notEmpty(this.brd[to]);
 
-        this.EpTarget = sm.EpSquare;
-        this.castling.Flag = sm.CastleFlags;
-        this.HalfMoveCount = sm.OldHalfMoveClock;
+        this.EpTarget = sm.epSquare;
+        this.castling.Flag = sm.castleFlags;
+        this.HalfMoveCount = sm.oldHalfMoveClock;
         this.plyCnt--;
         this.wm = Color.flip(this.wm);
-        sm.PieceNum = this.listPos[to];
+        sm.pieceNum = this.listPos[to];
 
         // handle a capture: insert piece back into piece list.
         // this works for EP captures too, since the square of the captured
         // piece is in the "capturedSquare" field rather than assuming the
         // value of the "to" field. The only time these two fields are
         // different is for an enpassant move.
-        if (Piece.isPiece(sm.CapturedPiece) && Square.isSquare(sm.CapturedSquare)) {
+        if (Piece.isPiece(sm.capturedPiece) && Square.isSquare(sm.capturedSquare)) {
             const c = Color.flip(this.wm);
-            this.listPos[this.list[c][sm.CapturedNum]] = this.pieceCount[c];
-            this.listPos[sm.CapturedSquare] = sm.CapturedNum;
-            this.list[c][this.pieceCount[c]] = this.list[c][sm.CapturedNum];
-            this.list[c][sm.CapturedNum] = sm.CapturedSquare;
-            this.material[sm.CapturedPiece]++;
+            this.listPos[this.list[c][sm.capturedNum]] = this.pieceCount[c];
+            this.listPos[sm.capturedSquare] = sm.capturedNum;
+            this.list[c][this.pieceCount[c]] = this.list[c][sm.capturedNum];
+            this.list[c][sm.capturedNum] = sm.capturedSquare;
+            this.material[sm.capturedPiece]++;
             this.pieceCount[c]++;
         }
         // handle promotion:
-        if (sm.Promote !== noPiece) {
+        if (sm.promote !== noPiece) {
             this.material[piece]--;
             this.removeFromBoard(piece, to);
             piece = Piece.create(this.wm, Piece.Pawn);
@@ -463,12 +463,12 @@ export class Position {
         }
 
         // now make the move:
-        this.list[this.wm][sm.PieceNum] = from;
-        this.listPos[from] = sm.PieceNum;
+        this.list[this.wm][sm.pieceNum] = from;
+        this.listPos[from] = sm.pieceNum;
         this.removeFromBoard(piece, to);
         this.addToBoard(piece, from);
-        if (Piece.isPiece(sm.CapturedPiece) && Square.isSquare(sm.CapturedSquare)) {
-            this.addToBoard(sm.CapturedPiece, sm.CapturedSquare);
+        if (Piece.isPiece(sm.capturedPiece) && Square.isSquare(sm.capturedSquare)) {
+            this.addToBoard(sm.capturedPiece, sm.capturedSquare);
             delete this.capt[this.plyCnt + 1];
         }
 
@@ -494,12 +494,12 @@ export class Position {
 
     public makeSanString(sm: SimpleMove, flag: SanCheckLevel = SanCheckLevel.MateTest) {
         let san = "";
-        const sFrom = Square.notEmpty(sm.From);
-        sm.PieceNum = this.listPos[sFrom];
-        const from = this.list[this.wm][sm.PieceNum];
+        const sFrom = Square.notEmpty(sm.from);
+        sm.pieceNum = this.listPos[sFrom];
+        const from = this.list[this.wm][sm.pieceNum];
         const piece = Piece.notEmpty(this.brd[from]);
         const p = Piece.type(piece);
-        const to = Square.notEmpty(sm.To);
+        const to = Square.notEmpty(sm.to);
         let mlist: SimpleMove[];
         if (p === Piece.Pawn) {
             if (Square.fyle(from) !== Square.fyle(to)) {  // pawn capture
@@ -508,12 +508,12 @@ export class Position {
             }
             san += Square.fyleChar(to);
             san += Square.rankChar(to);
-            if (((Square.rank(to) === 0) || (Square.rank(to) === 7)) && (sm.Promote !== noPiece)) {
+            if (((Square.rank(to) === 0) || (Square.rank(to) === 7)) && (sm.promote !== noPiece)) {
                 san += "=";
-                san += Piece.toChar(sm.Promote);
+                san += Piece.toChar(sm.promote);
             }
         } else if (p === Piece.King) {
-            if (sm.From === ns) {
+            if (sm.from === ns) {
                 san += "--";
             } else if ((Square.fyle(from) === 4) && (Square.fyle(to) === 6)) {
                 san += Castling.K;
@@ -547,9 +547,9 @@ export class Position {
                 this.matchLegalMove(mlist, p, to);
                 for (let i = 0; i < mlist.length; i++) {
                     const m2 = mlist[i];
-                    const from2 = Square.notEmpty(m2.From);
+                    const from2 = Square.notEmpty(m2.from);
                     const p2 = Piece.type(Piece.notEmpty(this.brd[from2]));
-                    if ((to === m2.To) && (from !== from2) && (p2 === p)) {
+                    if ((to === m2.to) && (from !== from2) && (p2 === p)) {
                         /* we have an ambiguity */
                         const f2 = Square.fyleChar(from2);
                         const r2 = Square.rankChar(from2);
@@ -702,8 +702,8 @@ export class Position {
     }
 
     public isLegalMove(sm: SimpleMove): boolean {
-        const from = sm.From;
-        const to = sm.To;
+        const from = sm.from;
+        const to = sm.to;
         if (!Square.isSquare(from) || !Square.isSquare(to)) { return false; }
         
         if (from === to) { return false; }
@@ -715,9 +715,9 @@ export class Position {
 
         if (Piece.color(mover) !== this.wm) { return false; }
         if (Piece.isPiece(captured) && Piece.color(captured) === this.wm) { return false; }
-        if (sm.MovingPiece !== mover) { return false; }
+        if (sm.movingPiece !== mover) { return false; }
         mover = Piece.type(mover);
-        if (sm.Promote !== noPiece && mover !== Piece.Pawn) { return false; }
+        if (sm.promote !== noPiece && mover !== Piece.Pawn) { return false; }
 
         const enemy = Color.flip(this.wm);
 
@@ -751,12 +751,12 @@ export class Position {
 
             // check the promotion piece:
             if (rto === 7) {
-                const p = sm.Promote;
+                const p = sm.promote;
                 if (p !== Piece.Queen && p !== Piece.Rook && p !== Piece.Bishop && p !== Piece.Knight) {
                     return false;
                 }
             } else {
-                if (sm.Promote !== noPiece) { return false; }
+                if (sm.promote !== noPiece) { return false; }
             }
         } else if (Piece.isSlider(mover)) {
             // make sure the direction is valid:
@@ -781,7 +781,7 @@ export class Position {
                 const mlist: SimpleMove[] = [];
                 this.genCastling(mlist);
                 for (let i = 0; i < mlist.length; i++) {
-                    if ((mlist[i].From === from) && (mlist[i].To === to)) {
+                    if ((mlist[i].from === from) && (mlist[i].to === to)) {
                         return false;
                     }
                 }
@@ -1125,11 +1125,11 @@ export class Position {
         // we do NOT set the pre-move castling/ep flags, or the captured
         // piece info, here since that is ONLY needed if the move is
         // going to be executed with DoSimpleMove() and then undone.
-        sm.From = from;
-        sm.To = to;
-        sm.Promote = promo;
-        sm.MovingPiece = this.brd[from];
-        sm.CapturedPiece = this.brd[to];
+        sm.from = from;
+        sm.to = to;
+        sm.promote = promo;
+        sm.movingPiece = this.brd[from];
+        sm.capturedPiece = this.brd[to];
         mlist.push(sm);
     }
 
@@ -1803,12 +1803,12 @@ export class Position {
             const mlist = this.generateMoves();
                 for (let i = 0; i < mlist.length; i++) {
                     const sm = mlist[i];
-                    if (sm.Promote === promo) {
-                        if ((sm.From === from) && (sm.To === to)) {
+                    if (sm.promote === promo) {
+                        if ((sm.from === from) && (sm.to === to)) {
                             return sm;
                         }
 
-                        if (reverse && (sm.To == from) && (sm.From == to)) {
+                        if (reverse && (sm.to == from) && (sm.from == to)) {
                             return sm;
                         }
                     }

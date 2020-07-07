@@ -9,7 +9,7 @@ import { Square } from './Square';
 import { Position, ChessPositionStd, SanCheckLevel, GenerateMode } from './Position';
 import { Move } from './Move';
 import { SimpleMove } from './SimpleMove';
-import { IChessUser, IChessGame, IGameData, IMovePart, ITreePart } from '../types/Interfaces';
+import { IChessUser, IChessGame, IGameData, IMovePart, ITreePart, IChessPlayer } from '../types/Interfaces';
 import { FenString } from './FenString';
 import { Squares, Colors } from '../types/Types';
 
@@ -214,8 +214,8 @@ export class Chess {
     public NoQueenPromotion: boolean = false;
     public Tags: ChessTags;
     public GameId: number = 0;
-    public White?: IChessUser;
-    public Black?: IChessUser;
+    public White?: IChessPlayer;
+    public Black?: IChessPlayer;
     public Event?: string;
     public Site?: string;
     public GameDate?: string;
@@ -239,20 +239,9 @@ export class Chess {
         this.pgnLastMovePos = this.pgnNextMovePos = 0;
 
         this.startPos = ChessPositionStd;
+        this.clear();
         
-        if (this.data.game) {
-            const game = this.data.game;
-            if (game.initialFen != FenString.standartStart) {
-                this.startFen = game.initialFen;
-                this.startPos = new Position(game.initialFen);
-            } else {
-                this.startPos = ChessPositionStd;
-            }
-
-            this.clear();
-
-            this.GameId = this.data.game.id;
-        }
+        this.init();
 
         this.positionChanged();
     }
@@ -273,6 +262,77 @@ export class Chess {
         return this.startFen !== FenString.standartStart;
     }
 
+    public init() {
+        const { game, player, opponent, steps, treeParts } = this.data;
+        if (game) {
+            if (game.initialFen != FenString.standartStart) {
+                this.startFen = game.initialFen;
+                this.startPos = new Position(game.initialFen);
+            } else {
+                this.startPos = ChessPositionStd;
+            }
+
+            this.GameId = game.id;
+            this.Event = game.event;
+
+            if (game.opening) {
+                this.EcoCode = game.opening.code;
+            }
+        }
+
+        this.assignPlayer(player);
+        this.assignPlayer(opponent);
+
+        const moves = steps ?? treeParts;
+        if (moves) {
+            this.supressEvents = true;
+            this.decodeMoves(moves);
+            this.supressEvents = false;
+        }
+
+        this.ToMove = this.currentPos.WhoMove;
+    }
+
+    private assignPlayer(player?: IChessPlayer) {
+        if (player) {
+            if (player.color === "black") {
+                this.Black = player;
+            } else {
+                this.White = player;
+            }
+        }
+    }
+
+    private isInstanceOfTreePart(object: IMovePart|ITreePart): object is ITreePart {
+        return 'eval' in object;
+    }
+
+    private decodeMoves(moves: IMovePart[]|ITreePart[]) {
+        for (let i = 0; i < moves.length; i++) {
+            const mv = moves[i];
+            if (mv.uci === undefined) {
+                continue;
+            }
+
+            const sm = this.currentPos.readCoordMove(mv.uci);
+            if (sm !== null) {
+                sm.plyCount = this.CurrentPos.PlyCount + 1;
+                sm.permanent = true;
+                sm.san = mv.san;
+                if (this.isInstanceOfTreePart(mv)) {
+                    if (mv.comments && (mv.comments.length > 0)) {
+                        sm.comments = mv.comments[0].comment; 
+                    }
+                }
+                
+                const move = this.addMove(sm, sm.san, mv.fen);
+                move.id = mv.id || "0";
+                move.data = mv;
+                this.moveList[move.moveKey] = move;
+            }
+        }
+    }
+
     private clear() {
         this.GameId = 0;
 
@@ -289,8 +349,24 @@ export class Chess {
     /// Clears all of the standard tags.
     /// </summary>
     private clearStandardTags () {
-        this.White = { id: 0, username: "?"};
-        this.Black = { id: 0, username: "?"};
+        this.White = { 
+            color: "white",
+            name: "?",
+            user: { 
+                id: 0, 
+                username: "?" 
+            } 
+        };
+        
+        this.Black = { 
+            color: "black",
+            name: "?",
+            user: { 
+                id: 0, 
+                username: "?" 
+            } 
+        };
+
         this.Event = "?";
         this.Site = "?";
         this.Round = "?";
@@ -330,55 +406,16 @@ export class Chess {
         this.currentPos.copyFrom(this.startPos);
         this.StartPlyCount = this.currentPos.PlyCount;
 
-        const moves = this.data.steps || this.data.treeParts;
-        if (moves) {
-            this.supressEvents = true;
-            this.decodeMoves(moves);
-            this.supressEvents = false;
-        }
-
         this.ToMove = this.currentPos.WhoMove;
-    }
-
-    private instanceOfTreePart(object: IMovePart|ITreePart): object is ITreePart {
-        return 'eval' in object;
-    }
-
-    private decodeMoves(moves: IMovePart[]|ITreePart[]) {
-        for (let i = 0; i < moves.length; i++) {
-            const mv = moves[i];
-            if (mv.uci === undefined) {
-                continue;
-            }
-
-            const sm = this.currentPos.readCoordMove(mv.uci);
-            if (sm !== null) {
-                sm.PlyCount = this.CurrentPos.PlyCount + 1;
-            
-                sm.San = mv.san;
-                if (this.instanceOfTreePart(mv)) {
-                    if (mv.comments && (mv.comments.length > 0)) {
-                        sm.Comments = mv.comments[0].comment; 
-                    }
-                    // sm.Nag = mv[5];
-                }
-                
-                sm.Permanent = true;
-
-                const move = this.addMove(sm, sm.San, mv.fen);
-                move.id = mv.id || "0";
-                this.moveList[move.moveKey] = move;
-            }
-        }
     }
 
     private positionChanged() {
         if (!this.supressEvents) {
-            if (!this.currentMove.Fen) {
-                this.currentMove.Fen = FenString.fromPosition(this.currentPos);
+            if (!this.currentMove.fen) {
+                this.currentMove.fen = FenString.fromPosition(this.currentPos);
             }
 
-            this.Fen = this.currentMove.Fen;
+            this.Fen = this.currentMove.fen;
         }
     }
 
@@ -426,10 +463,10 @@ export class Chess {
         }
 
         const move = this.currentMove.Prev!;
-        const thisFen = move.Fen;
+        const thisFen = move.fen;
         let rc = 1;
         while (!move.START_MARKER) {
-            if (thisFen === move.Fen) { 
+            if (thisFen === move.fen) { 
                 rc++; 
             }
         }
@@ -443,22 +480,22 @@ export class Chess {
     public makeMove(fr: Squares.Square, to: Squares.Square, promote?: string) {
         const { currentPos } = this;
         const sm = new SimpleMove();
-        sm.PieceNum = currentPos.getPieceNum(fr);
-        sm.MovingPiece = currentPos.getPiece(fr);
-        if (!Piece.isPiece(sm.MovingPiece)) {
+        sm.pieceNum = currentPos.getPieceNum(fr);
+        sm.movingPiece = currentPos.getPiece(fr);
+        if (!Piece.isPiece(sm.movingPiece)) {
             return;
         }
 
-        sm.Color = Piece.color(sm.MovingPiece);
-        sm.From = fr;
-        sm.To = to;
-        sm.CapturedPiece = currentPos.getPiece(to);
-        sm.CapturedSquare = to;
-        sm.CastleFlags = currentPos.Castling.Flag;
-        sm.EpSquare = currentPos.EpTarget;
-        sm.Promote = Piece.None;
+        sm.color = Piece.color(sm.movingPiece);
+        sm.from = fr;
+        sm.to = to;
+        sm.capturedPiece = currentPos.getPiece(to);
+        sm.capturedSquare = to;
+        sm.castleFlags = currentPos.Castling.Flag;
+        sm.epSquare = currentPos.EpTarget;
+        sm.promote = Piece.None;
         
-        const piece = sm.MovingPiece;
+        const piece = sm.movingPiece;
         const ptype = Piece.type(piece);
         const enemy = Color.flip(currentPos.WhoMove);
 
@@ -469,15 +506,15 @@ export class Chess {
                 this.InPromotion = true;
                 return sm;
             } else {
-                sm.Promote = Piece.typeFromChar(promote);
+                sm.promote = Piece.typeFromChar(promote);
             }
         }
 
         // Handle en passant capture:
-        if (ptype == Piece.Pawn && (sm.CapturedPiece == Piece.None) && (Square.fyle(fr) != Square.fyle(to))) {
+        if (ptype == Piece.Pawn && (sm.capturedPiece == Piece.None) && (Square.fyle(fr) != Square.fyle(to))) {
             const enemyPawn = Piece.create(enemy, Piece.Pawn);
-            sm.CapturedSquare = (this.currentPos.WhoMove === Color.White ? (to - 8) as Squares.Square : (to + 8) as Squares.Square);
-            sm.CapturedPiece = enemyPawn;
+            sm.capturedSquare = (this.currentPos.WhoMove === Color.White ? (to - 8) as Squares.Square : (to + 8) as Squares.Square);
+            sm.capturedPiece = enemyPawn;
         }
 
         return sm;
@@ -497,11 +534,11 @@ export class Chess {
             this.currentMove.truncate();
         }
 
-        if (!sm.San) {
+        if (!sm.san) {
             if (!san || (san == undefined)) {
-                sm.San = this.currentPos.makeSanString(sm, SanCheckLevel.MateTest);
+                sm.san = this.currentPos.makeSanString(sm, SanCheckLevel.MateTest);
             } else {
-                sm.San = san;
+                sm.san = san;
             }
         }
 
@@ -511,7 +548,7 @@ export class Chess {
         if (!fen) {
             fen = FenString.fromPosition(currentPos);
         }
-        newMove.Fen = fen;
+        newMove.fen = fen;
         this.CurrentPlyCount++;
 
         if (!this.varDepth) {
@@ -556,7 +593,7 @@ export class Chess {
         this.supressEvents = true;
         if (this.moveList[key]) {
             this.currentMove = this.moveList[key];
-            this.currentPos = new Position(this.currentMove.Fen);
+            this.currentPos = new Position(this.currentMove.fen);
             this.CurrentPlyCount = this.currentPos.PlyCount; 
             this.currentMove = this.currentMove.Next!;
         }
@@ -573,7 +610,7 @@ export class Chess {
             return false;
         }
 
-        this.currentPos.doSimpleMove(this.currentMove.moveData!);
+        this.currentPos.doSimpleMove(this.currentMove.sm!);
         this.currentMove = this.currentMove.Next!;
         this.CurrentPlyCount++;
         this.positionChanged();
@@ -592,7 +629,7 @@ export class Chess {
         }
 
         this.currentMove = prev;
-        this.currentPos.undoSimpleMove(this.currentMove.moveData!);
+        this.currentPos.undoSimpleMove(this.currentMove.sm!);
         this.CurrentPlyCount--;
         this.positionChanged();
 

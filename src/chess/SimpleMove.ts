@@ -10,26 +10,26 @@ const np = Piece.None;
  * Move data.
  */
 export class SimpleMove {
-    public PieceNum: number = 0;
-    public MovingPiece?: Pieces.Piece = np;
-    public From?: Squares.Square = ns;
-    public To?: Squares.Square = ns;
-    public Color?: Colors.BW = Color.None;
-    public CapturedNum = 0;
-    public CapturedPiece?: Pieces.Piece = np;
-    public Promote?: Pieces.PieceType = np;
-    public CapturedSquare?: Squares.Square = ns; // only different to "to" field if this capture is an en passant capture.
-    public CastleFlags = 0;
-    public EpSquare?: Squares.Square = ns;
-    public OldHalfMoveClock = 0;
+    public pieceNum: number = 0;
+    public movingPiece?: Pieces.Piece = np;
+    public from?: Squares.Square = ns;
+    public to?: Squares.Square = ns;
+    public color?: Colors.BW = Color.None;
+    public capturedNum = 0;
+    public capturedPiece?: Pieces.Piece = np;
+    public promote?: Pieces.PieceType = np;
+    public capturedSquare?: Squares.Square = ns; // only different to "to" field if this capture is an en passant capture.
+    public castleFlags = 0;
+    public epSquare?: Squares.Square = ns;
+    public oldHalfMoveClock = 0;
 
-    public PlyCount = 0;
-    public San?: string;
-    public Comments?: string;
-    public Nag?: string;
-    public Permanent: boolean = true;
+    public plyCount = 0;
+    public san?: string;
+    public comments?: string;
+    public nag?: string;
+    public permanent: boolean = true;
 
     public toString(): string {
-        return this.San || "";
+        return this.san || "";
     }
 }
