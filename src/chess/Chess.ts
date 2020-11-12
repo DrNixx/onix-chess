@@ -354,7 +354,7 @@ export class Chess {
             name: "?",
             user: { 
                 id: 0, 
-                username: "?" 
+                name: "?" 
             } 
         };
         
@@ -363,7 +363,7 @@ export class Chess {
             name: "?",
             user: { 
                 id: 0, 
-                username: "?" 
+                name: "?" 
             } 
         };
 

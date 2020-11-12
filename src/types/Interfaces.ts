@@ -20,9 +20,9 @@ export interface IChessVariant {
     shortName: string;
 }
 
-export type StatusName = 'started' | 'aborted' | 'mate' | 'resign' |
-                         'stalemate' | 'timeout' | 'draw' | 'outoftime' |
-                         'noStart' | 'cheat' | 'variantEnd';
+export type StatusName = 'created' | 'new' | 'wait' | 'started' | 'aborted' | 
+                         'mate' | 'resign' | 'stalemate' | 'timeout' | 'draw' | 
+                         'outoftime' | 'noStart' | 'cheat' | 'variantEnd' | 'paused';
 
 export interface IGameStatus {
     name: StatusName;
@@ -59,6 +59,7 @@ export interface IChessGame {
     event?: string;
     tournamentId?: number;
     createdAt?: number;
+    createdBy?: number | string;
     private?: boolean;
     advance?: boolean;
     winner?: Colors.Name;
@@ -82,9 +83,15 @@ export interface IChessTournament {
     nbSecondsForFirstMove?: number;
 }
 
+export interface IChessTitle {
+    id: string,
+    name: string
+}
+
 export interface IChessUser extends IUser {
     aurl?: string | string[];
-    title?: string;
+    icon?: string,
+    title?: IChessTitle |string;
     perfs?: IChessPerfs;
 }
 
