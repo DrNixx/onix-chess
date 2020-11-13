@@ -1,4 +1,3 @@
-import * as assert from 'assert';
 import { Pieces, Colors } from '../types/Types';
 import { Color } from './Color';
 
@@ -40,7 +39,6 @@ export namespace Piece {
     export const Score = [9999, 10, 6, 3, 3, 1];
 
     export function notEmpty(p?: Pieces.Piece): Pieces.Piece {
-        assert(p !== noPiece);
         return p!;
     }
 

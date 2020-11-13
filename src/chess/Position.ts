@@ -1,4 +1,3 @@
-import * as assert from 'assert';
 import cloneDeep from 'lodash-es/cloneDeep';
 import indexOf from 'lodash-es/indexOf';
 import { Colors, Pieces, Squares, Directions } from '../types/Types';

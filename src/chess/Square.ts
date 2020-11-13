@@ -1,4 +1,3 @@
-import * as assert from 'assert';
 import { Colors, Squares, Directions } from '../types/Types';
 import { Color } from './Color';
 import { Direction } from './Direction';
@@ -265,7 +264,6 @@ export namespace Square {
     }
 
     export function notEmpty(sq?: Squares.Square): Squares.Square {
-        assert(isSquare(sq));
         return sq!;
     }
 
