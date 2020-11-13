@@ -23,6 +23,7 @@
   "author": "Nick Panteleeff <drnixx@gmail.com> (https://github.com/DrNixx)",
   "license": "MIT",
   "dependencies": {
+    "assert": "^2.0.0",
     "lodash-es": "^4.17.15",
     "onix-core": "^4.2.0",
     "shortid": "^2.2.16",
