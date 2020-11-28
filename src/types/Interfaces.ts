@@ -20,9 +20,11 @@ export interface IChessVariant {
     shortName: string;
 }
 
+export type StatusId = number;
+
 export type StatusName = 'created' | 'new' | 'wait' | 'started' | 'aborted' | 
                          'mate' | 'resign' | 'stalemate' | 'timeout' | 'draw' | 
-                         'outoftime' | 'noStart' | 'cheat' | 'variantEnd' | 'paused';
+                         'outoftime' | 'noStart' | 'cheat' | 'variantEnd' | 'paused' | 'external';
 
 export interface IGameStatus {
     name: StatusName;
@@ -42,6 +44,7 @@ export interface IChessOpening {
     name: string;
 }
 
+ 
 export interface IChessGame {
     id: number | string;
     load: boolean;
@@ -52,7 +55,8 @@ export interface IChessGame {
     rated?: boolean;
     initialFen: string;
     fen?: string;
-    player: Colors.Name;
+    // Current user as played color
+    player?: Colors.Name;
     turns: number;
     startedAtTurn: number;
     status: IGameStatus;
