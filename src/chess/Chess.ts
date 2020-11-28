@@ -213,7 +213,7 @@ export class Chess {
     /// </summary>
     public NoQueenPromotion: boolean = false;
     public Tags: ChessTags;
-    public GameId: number = 0;
+    public GameId?: number | string = undefined;
     public White?: IChessPlayer;
     public Black?: IChessPlayer;
     public Event?: string;

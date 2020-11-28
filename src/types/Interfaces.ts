@@ -43,7 +43,7 @@ export interface IChessOpening {
 }
 
 export interface IChessGame {
-    id: number;
+    id: number | string;
     load: boolean;
     insite: boolean;
     variant: IChessVariant;
