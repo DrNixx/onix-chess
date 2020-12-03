@@ -110,10 +110,10 @@ export interface IChessPlayer {
 export interface IClockPart {
     per: 'game' | 'move';
     initial: number;
-    increment: number;
-    min: number;
-    interval: number;
-    max: number;
+    increment?: number;
+    min?: number;
+    interval?: number;
+    max?: number;
 }
 
 export interface IBlitzClock {
