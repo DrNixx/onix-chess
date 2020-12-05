@@ -99,22 +99,20 @@ export class Move {
         return move;
     }
 
-    public get First() : Move | null {
-        const move = this.Begin.Next;
-        return ((move !== null) && (!move.isEnd)) ? move : null;
+    public get First() : Move {
+        return this.Begin.Next!;
     }
 
-    public get Prev(): Move | null {
-        return this.prev_move;
+    public get Prev(): Move {
+        return (!this.isBegin()) ? this.prev_move! : this;
     }
 
-    public get Next(): Move | null {
-        return this.next_move;
+    public get Next(): Move {
+        return (!this.isEnd()) ? this.next_move! : this;
     }
 
-    public get Last(): Move | null {
-        const move = this.End.Prev;
-        return ((move !== null) && (!move.isBegin)) ? move : null;
+    public get Last(): Move {
+        return this.End.Prev!;
     }
 
     public get End() {
