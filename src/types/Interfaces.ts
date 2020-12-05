@@ -41,7 +41,8 @@ export type IChessPerfs = {
 
 export interface IChessOpening {
     code: string;
-    name: string;
+    name?: string;
+    fen?: string
 }
 
  

@@ -10,5 +10,4 @@ export { Move } from './chess/Move';
 export { SimpleMove } from './chess/SimpleMove';
 export { FenString, FenFormat } from './chess/FenString';
 export { Position } from './chess/Position';
-export { IOpeningPosition } from './types/IOpeningPosition';
 export { Chess } from './chess/Chess';

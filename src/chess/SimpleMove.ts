@@ -23,7 +23,7 @@ export class SimpleMove {
     public epSquare?: Squares.Square = ns;
     public oldHalfMoveClock = 0;
 
-    public plyCount = 0;
+    public ply = 0;
     public san?: string;
     public comments?: string;
     public nag?: string;

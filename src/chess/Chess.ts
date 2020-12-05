@@ -9,7 +9,7 @@ import { Square } from './Square';
 import { Position, ChessPositionStd, SanCheckLevel, GenerateMode } from './Position';
 import { Move } from './Move';
 import { SimpleMove } from './SimpleMove';
-import { IChessUser, IChessGame, IGameData, IMovePart, ITreePart, IChessPlayer } from '../types/Interfaces';
+import { IChessUser, IChessGame, IGameData, IMovePart, ITreePart, IChessPlayer, IChessOpening } from '../types/Interfaces';
 import { FenString } from './FenString';
 import { Squares, Colors } from '../types/Types';
 
@@ -90,7 +90,9 @@ export class ChessTags {
                             this.owner.BlackElo = chessRatingParseValue(value);
                             break;
                         case "ecocode":
-                            this.owner.EcoCode = value;
+                            this.owner.Eco = {
+                                code: value
+                            }
                             break;
                         case "fen":
                             this.owner.StartFen = value;
@@ -225,7 +227,7 @@ export class Chess {
     public WhiteRatingType?: ChessRatingType;
     public BlackElo?: number;
     public BlackRatingType?: ChessRatingType;
-    public EcoCode?: string;
+    public Eco?: IChessOpening;
     public Result: ChessResultColor = ChessResultColor.None;
 
     /**
@@ -276,7 +278,7 @@ export class Chess {
             this.Event = game.event;
 
             if (game.opening) {
-                this.EcoCode = game.opening.code;
+                this.Eco = game.opening;
             }
         }
 
@@ -316,9 +318,10 @@ export class Chess {
 
             const sm = this.currentPos.readCoordMove(mv.uci);
             if (sm !== null) {
-                sm.plyCount = this.CurrentPos.PlyCount + 1;
+                sm.ply = this.CurrentPos.PlyCount + 1;
                 sm.permanent = true;
                 sm.san = mv.san;
+                sm.color = this.CurrentPos.WhoMove;
                 if (this.isInstanceOfTreePart(mv)) {
                     if (mv.comments && (mv.comments.length > 0)) {
                         sm.comments = mv.comments[0].comment; 
@@ -372,7 +375,9 @@ export class Chess {
         this.Round = "?";
         this.GameDate = "????.??.??";
         this.EventDate = "????.??.??";
-        this.EcoCode = "A00";
+        this.Eco = {
+            code: "A00"
+        };
         this.Result = ChessResultColor.None;
         this.WhiteElo = this.BlackElo = 0;
         this.WhiteRatingType = this.BlackRatingType = ChessRatingType.Elo;

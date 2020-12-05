@@ -74,21 +74,34 @@ export class Move {
         return firstMove.next_move;
     }
 
-    public isFirst() {
-        return this.START_MARKER || (this.prev_move && this.prev_move.START_MARKER);
-    }
-
     public isBegin() {
         return this.START_MARKER;
     }
 
-    public get First() : Move {
+    public isFirst() {
+        return this.START_MARKER || ((this.prev_move !== null) && this.prev_move.START_MARKER);
+    }
+
+    public isLast() {
+        return this.END_MARKER || ((this.next_move !== null) && this.next_move.END_MARKER);
+    }
+
+    public isEnd() {
+        return this.END_MARKER;
+    }
+
+    public get Begin() : Move {
         let move: Move = this;
         while (move.prev_move) {
             move = move.prev_move;
         }
 
         return move;
+    }
+
+    public get First() : Move | null {
+        const move = this.Begin.Next;
+        return ((move !== null) && (!move.isEnd)) ? move : null;
     }
 
     public get Prev(): Move | null {
@@ -99,15 +112,12 @@ export class Move {
         return this.next_move;
     }
 
-    public isLast() {
-        return this.END_MARKER || (this.next_move && this.next_move.END_MARKER);
+    public get Last(): Move | null {
+        const move = this.End.Prev;
+        return ((move !== null) && (!move.isBegin)) ? move : null;
     }
 
-    public isEnd() {
-        return this.END_MARKER;
-    }
-
-    public get Last() {
+    public get End() {
         let move: Move = this;
         while (move.next_move) {
             move = move.next_move;
@@ -174,8 +184,8 @@ export class Move {
         newMove.parent = this.parent;
         newMove.varNo = this.varNo;
         newMove.sm = sm;
-        newMove.name = sm.san ? sm.san : sm.plyCount.toString();
-        newMove.ply = sm.plyCount;
+        newMove.name = sm.san ? sm.san : sm.ply.toString();
+        newMove.ply = sm.ply;
 
         newMove.next_move = this;
         newMove.prev_move = this.prev_move;

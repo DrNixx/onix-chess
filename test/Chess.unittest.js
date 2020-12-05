@@ -2209,6 +2209,30 @@ describe('Chess', function() {
             expect(game.CurrentPlyCount).to.equal(70);
         });
 
+        it('test moves', function() {
+            const game = new Chess(dataWatch);
+
+            game.move
+
+            game.moveFirst();
+            expect(game.CurrentMove.isBegin()).to.equal(false);
+            expect(game.CurrentMove.isFirst()).to.equal(true);
+            expect(game.CurrentMove.sm.color).to.equal(0);
+            expect(game.CurrentMove.sm.ply).to.equal(1);
+
+            game.moveForward();
+            expect(game.CurrentMove.isBegin()).to.equal(false);
+            expect(game.CurrentMove.isFirst()).to.equal(false);
+            expect(game.CurrentMove.sm.color).to.equal(1);
+            expect(game.CurrentMove.sm.ply).to.equal(2);
+
+            game.moveForward();
+            expect(game.CurrentMove.isBegin()).to.equal(false);
+            expect(game.CurrentMove.isFirst()).to.equal(false);
+            expect(game.CurrentMove.sm.color).to.equal(0);
+            expect(game.CurrentMove.sm.ply).to.equal(3);
+        });
+
         it('test construct with analysis data', function() {
             const game = new Chess(dataAnalyse);
             game.moveLast();
