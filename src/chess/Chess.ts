@@ -4,6 +4,7 @@ import indexOf from 'lodash-es/indexOf';
 
 import { Hashtable } from 'onix-core';
 import { Color } from './Color';
+import { GameResult } from './GameResult';
 import { Piece } from './Piece';
 import { Square } from './Square';
 import { Position, ChessPositionStd, SanCheckLevel, GenerateMode } from './Position';
@@ -108,44 +109,6 @@ export class ChessTags {
     }
 }
 
-export enum ChessResultColor {
-    None = 0,
-    White = 1,
-    Black = 2,
-    Draw = 3
-}
-
-enum ChessResultType {
-    None = 0,
-    Win = 1,
-    Lose = 2,
-    Draw = 3
-}
-
-const OppositeColor: ChessResultColor[] = [
-    ChessResultColor.None,
-    ChessResultColor.Black,
-    ChessResultColor.White,
-    ChessResultColor.Draw
-];
-
-const OppositeType: ChessResultType[] = [
-    ChessResultType.None,
-    ChessResultType.Lose,
-    ChessResultType.Win,
-    ChessResultType.Draw
-];
-
-const score: number[] = [ 0, 1, 0, 0.5 ];
-
-const resultChar: string[] = [ "*", "1", "0", "=" ];
-
-const resultShortString: string[] = [ "*", "1-0", "0-1", "=-=" ];
-
-const resultLongStr: string[] = [ "*", "1-0", "0-1", "1/2-1/2" ];
-
-const resultHtmlStr: string[] = ["*", "1&ndash;0", "0&ndash;1", "&frac12;&ndash;&frac12;"];
-
 export class ChessGameState {
     public InCheckMate: boolean = false;
     public InStaleMate: boolean = false;
@@ -228,7 +191,7 @@ export class Chess {
     public BlackElo?: number;
     public BlackRatingType?: ChessRatingType;
     public Eco?: IChessOpening;
-    public Result: ChessResultColor = ChessResultColor.None;
+    public Result: GameResult.Color = GameResult.Color.None;
 
     /**
      * @constructor 
@@ -386,7 +349,7 @@ export class Chess {
         this.Eco = {
             code: "A00"
         };
-        this.Result = ChessResultColor.None;
+        this.Result = GameResult.Color.None;
         this.WhiteElo = this.BlackElo = 0;
         this.WhiteRatingType = this.BlackRatingType = ChessRatingType.Elo;
     }
@@ -665,13 +628,13 @@ export class Chess {
 
     public getResultName(mode: 'char' | 'short' | 'long' | 'html'): string {
         if (mode === "char") {
-            return resultChar[this.Result];
+            return GameResult.resultChar[this.Result];
         } else if (mode === "short") {
-            return resultShortString[this.Result];
+            return GameResult.resultShortString[this.Result];
         } else if (mode === "long") {
-            return resultLongStr[this.Result];
+            return GameResult.resultLongStr[this.Result];
         } else if (mode === "html") {
-            return resultHtmlStr[this.Result];
+            return GameResult.resultHtmlStr[this.Result];
         }
 
         return "?";
