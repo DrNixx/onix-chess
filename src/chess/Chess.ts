@@ -281,6 +281,10 @@ export class Chess {
             this.GameId = game.id;
             this.Event = game.event;
 
+            if (game.status.result) {
+                this.Result = game.status.result;
+            }
+
             if (game.opening) {
                 this.Eco = game.opening;
             }
