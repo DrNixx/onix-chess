@@ -138,6 +138,7 @@ export interface IAdvanceClock {
     black: number;
     totalTime: number;
     lastMoveAt?: number;
+    serverNow?: number;
 }
 
 export interface IUserAnalysis {
