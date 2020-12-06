@@ -235,7 +235,7 @@ export class Chess {
      */
     constructor(data?: IGameData) {
         this.data = data || defaultGameData;
-
+        
         this.Tags = new ChessTags(this);
         this.Altered = false;
         this.pgnLastMovePos = this.pgnNextMovePos = 0;
@@ -248,11 +248,15 @@ export class Chess {
         this.positionChanged();
     }
 
-    public get CurrentMove() {
+    public get RawData(): Readonly<IGameData> {
+        return this.data;
+    }
+
+    public get CurrentMove(): Move {
         return this.currentMove;
     }
 
-    public get CurrentPos() {
+    public get CurrentPos(): Position {
         return this.currentPos;
     }
 
