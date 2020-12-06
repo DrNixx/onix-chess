@@ -121,9 +121,12 @@ export interface IBlitzClock {
     running: boolean;
     initial: number;
     increment: number;
+    white: number;
+    black: number;
 }
 
 export interface ICorrespondenceClock {
+    running: boolean;
     daysPerTurn: number;
     increment: number;
     white: number;
@@ -139,6 +142,20 @@ export interface IAdvanceClock {
     totalTime: number;
     lastMoveAt?: number;
     serverNow?: number;
+}
+
+type AnyClock = IBlitzClock | ICorrespondenceClock | IAdvanceClock;
+
+export function isBlitzClock(c?: AnyClock): c is IBlitzClock {
+    return !!c && ('initial' in c);
+}
+
+export function isCorrespondenceClock(c?: AnyClock): c is ICorrespondenceClock {
+    return !!c && ('daysPerTurn' in c);
+}
+
+export function isAdvanceClock(c?: AnyClock): c is IAdvanceClock {
+    return !!c && ('totalTime' in c);
 }
 
 export interface IUserAnalysis {

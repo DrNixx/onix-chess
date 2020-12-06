@@ -2,6 +2,7 @@
 
 const expect = require('chai').expect;
 const { Chess } = require("../dist/chess/Chess");
+const { isBlitzClock, isCorrespondenceClock, isAdvanceClock } = require("../dist/types/Interfaces");
 
 const dataAnalyse = {
     "game": {
@@ -173,7 +174,7 @@ const dataAnalyse = {
         "name": "\"Личный чемпионат сайта по адвансу - 2018\", финал",
         "running": false
     },
-    "clock": {
+    "correspondence": {
         "limit": "Адванс 10+2/21",
         "can_pause": true,
         "parts": [
@@ -1628,7 +1629,7 @@ const dataWatch = {
         "name": "Серия #24910",
         "running": false
     },
-    "clock": {
+    "correspondence": {
         "limit": "3 дня/ход",
         "can_pause": true,
         "parts": [
@@ -2212,8 +2213,6 @@ describe('Chess', function() {
         it('test moves', function() {
             const game = new Chess(dataWatch);
 
-            game.move
-
             game.moveFirst();
             expect(game.CurrentMove.isBegin()).to.equal(false);
             expect(game.CurrentMove.isFirst()).to.equal(true);
@@ -2231,6 +2230,15 @@ describe('Chess', function() {
             expect(game.CurrentMove.isFirst()).to.equal(false);
             expect(game.CurrentMove.sm.color).to.equal(0);
             expect(game.CurrentMove.sm.ply).to.equal(3);
+        });
+
+        it('test clock', function() {
+            const game = new Chess(dataWatch);
+
+            const raw = game.RawData;
+            expect(isBlitzClock(game.RawData.correspondence)).to.equal(false);
+            expect(isCorrespondenceClock(game.RawData.correspondence)).to.equal(false);
+            expect(isAdvanceClock(game.RawData.correspondence)).to.equal(true);
         });
 
         it('test construct with analysis data', function() {
