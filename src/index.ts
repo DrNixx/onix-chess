@@ -3,6 +3,7 @@ export * from './types/Types';
 export * from './types/Interfaces';
 export * from './actions/ChessActions';
 export { Color } from './chess/Color';
+export { GameResult } from './chess/GameResult';
 export { CastlingStr, Castling, CastlingSide } from './chess/Castling';
 export { Piece } from './chess/Piece';
 export { Square } from './chess/Square';
