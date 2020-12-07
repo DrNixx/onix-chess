@@ -1,19 +1,8 @@
 import { Reducer } from 'redux';
 import { Logger } from 'onix-core';
-import * as cg from 'chessground/types';
-import * as chessActions from './ChessActions';
-import { GameState } from './GameState';
-import { Move } from '../chess/Move';
-import { Square } from '../chess/Square';
-import { Color } from '../chess/Color';
+import { GameActions as ga } from './GameActions';
+import { GameState, getGameState } from './GameState';
 import { Chess as ChessEngine } from '../chess/Chess';
-import { FenString } from '../chess/FenString';
-
-export type GameAction = 
-    chessActions.GameNavigateToPlyAction | 
-    chessActions.GameNavigateToKeyAction |
-    chessActions.GameNavigateToMoveAction;
-    
 
 const INITIAL_STATE: GameState = {
     engine: new ChessEngine(),
@@ -21,29 +10,10 @@ const INITIAL_STATE: GameState = {
     isCheck: false,
 };
 
-const getLastMove = (move: Move) => {
-    let lastMove: cg.Key[]|undefined = undefined;
-
-    if (!move.isBegin()) {
-        const { sm } = move.Prev!;
-        lastMove = [<cg.Key>Square.name(sm!.from!), <cg.Key>Square.name(sm!.to!)];
-    }
-
-    return lastMove;
-}
-
-const getGameState = (engine: ChessEngine) => {
-    return {
-        lastMove: getLastMove(engine.CurrentMove),
-        fen: FenString.fromPosition(engine.CurrentPos),
-        isCheck: engine.CurrentPos.isKingInCheck() ? Color.toName(engine.CurrentPos.WhoMove) : false,
-    };
-}
-
-export const gameReducer: Reducer<GameState, GameAction> = (state: GameState = INITIAL_STATE, action: GameAction) => {
+export const gameReducer: Reducer<GameState, ga.GameAction> = (state: GameState = INITIAL_STATE, action: ga.GameAction) => {
     Logger.debug('Try game action', action);
     switch (action.type) {
-        case chessActions.NAVIGATE_TO_PLY: {
+        case ga.NAVIGATE_TO_PLY: {
             const { engine } = state;
 
             if (engine) {
@@ -60,8 +30,8 @@ export const gameReducer: Reducer<GameState, GameAction> = (state: GameState = I
             };
         }
 
-        case chessActions.NAVIGATE_TO_MOVE: {
-            const { engine, fen } = state;
+        case ga.NAVIGATE_TO_MOVE: {
+            const { engine } = state;
 
             if (engine) {
                 engine.moveToPly(action.move.PlyCount);
@@ -77,8 +47,8 @@ export const gameReducer: Reducer<GameState, GameAction> = (state: GameState = I
             };
         }
 
-        case chessActions.NAVIGATE_TO_KEY: {
-            const { engine, fen } = state;
+        case ga.NAVIGATE_TO_KEY: {
+            const { engine } = state;
 
             if (engine) {
                 engine.moveToKey(action.move);
@@ -91,6 +61,32 @@ export const gameReducer: Reducer<GameState, GameAction> = (state: GameState = I
             return {
                 ...state
             };
+        }
+
+        case ga.GAME_ADD_MOVE: {
+            const { engine } = state;
+
+            if (engine) {
+                engine.decodeMove(action.move);
+                engine.moveLast();
+                return {
+                    ...state,
+                    ...getGameState(engine)
+                }
+            }
+            
+            return {
+                ...state
+            };
+        }
+
+        case ga.GAME_LOAD_FULL: {
+            const engine = new ChessEngine(action.game);
+            engine.moveLast();
+            return {
+                engine,
+                ...getGameState(engine)
+            }
         }
 
         default:

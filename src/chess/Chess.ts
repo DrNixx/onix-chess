@@ -13,6 +13,7 @@ import { SimpleMove } from './SimpleMove';
 import { IChessUser, IChessGame, IGameData, IMovePart, ITreePart, IChessPlayer, IChessOpening } from '../types/Interfaces';
 import { FenString } from './FenString';
 import { Squares, Colors } from '../types/Types';
+import shortid = require('shortid');
 
 export enum ChessRatingType {
     None = 0,
@@ -256,7 +257,7 @@ export class Chess {
         this.assignPlayer(player);
         this.assignPlayer(opponent);
 
-        const moves = steps ?? treeParts;
+        const moves = treeParts ?? steps;
         if (moves) {
             this.supressEvents = true;
             this.decodeMoves(moves);
@@ -280,30 +281,35 @@ export class Chess {
         return 'eval' in object;
     }
 
+    public decodeMove(mv: IMovePart|ITreePart) {
+        if (mv.uci === undefined) {
+            return;
+        }
+
+        const sm = this.currentPos.readCoordMove(mv.uci);
+        if (sm !== null) {
+            sm.ply = this.CurrentPos.PlyCount + 1;
+            sm.permanent = true;
+            sm.san = mv.san;
+            sm.color = this.CurrentPos.WhoMove;
+            if (this.isInstanceOfTreePart(mv)) {
+                if (mv.comments && (mv.comments.length > 0)) {
+                    sm.comments = mv.comments[0].comment; 
+                }
+            }
+            
+            const move = this.addMove(sm, sm.san, mv.fen);
+            move.id = mv.id || shortid.generate();
+            move.data = mv;
+            this.moveList[move.moveKey] = move;
+        }
+    }
+
     private decodeMoves(moves: IMovePart[]|ITreePart[]) {
         for (let i = 0; i < moves.length; i++) {
             const mv = moves[i];
-            if (mv.uci === undefined) {
-                continue;
-            }
 
-            const sm = this.currentPos.readCoordMove(mv.uci);
-            if (sm !== null) {
-                sm.ply = this.CurrentPos.PlyCount + 1;
-                sm.permanent = true;
-                sm.san = mv.san;
-                sm.color = this.CurrentPos.WhoMove;
-                if (this.isInstanceOfTreePart(mv)) {
-                    if (mv.comments && (mv.comments.length > 0)) {
-                        sm.comments = mv.comments[0].comment; 
-                    }
-                }
-                
-                const move = this.addMove(sm, sm.san, mv.fen);
-                move.id = mv.id || "0";
-                move.data = mv;
-                this.moveList[move.moveKey] = move;
-            }
+            this.decodeMove(mv);
         }
     }
 
