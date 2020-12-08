@@ -9,7 +9,8 @@
     "webpack": "webpack --config webpack.config.js",
     "stats": "webpack --profile --json > stats.json",
     "statsp": "webpack --profile --json --mode=production > stats.json",
-    "test": "mocha --recursive --require @babel/register --require ./test/helpers.js"
+    "test": "mocha --recursive --require @babel/register --require ./test/helpers.js",
+    "testrun": "tsc & mocha --recursive --require @babel/register --require ./test/helpers.js"
   },
   "keywords": [
     "onix",

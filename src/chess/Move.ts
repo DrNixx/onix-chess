@@ -5,6 +5,7 @@ import { Square } from './Square';
 import { SimpleMove } from './SimpleMove';
 import { Squares, Colors, Pieces } from '../types/Types';
 import { ITreePart, IMovePart } from '../types/Interfaces';
+import { Position } from './Position';
 
 /**
  * Move in position
@@ -22,11 +23,11 @@ export class Move {
     public END_MARKER: boolean;
 
     public uid: string;
-    public id: string = "0";
+    public id: string;
     public name: string;
     public whoMove: Colors.BW;
     public comments: string;
-    public fen: string | undefined;
+    public fen: string;
 
     public sm: SimpleMove | null;
     public data?: ITreePart | IMovePart;
@@ -35,8 +36,10 @@ export class Move {
      * @constructor
      */
     constructor() {
+        this.id = "0";
         this.uid = shortid.generate();
         this.name = "";
+        this.fen = "";
         this.sm = null;
         this.whoMove = Color.White;
         this.ply = 0;
@@ -47,7 +50,7 @@ export class Move {
         this.next_move = null;
     }
 
-    public static init(fen?: string, parent?: Move | null): Move {
+    public static init(fen: string, parentOrPos: Move | Position): Move {
         const firstMove = new Move();
         firstMove.name = "FirstMove";
         firstMove.fen = fen;
@@ -62,13 +65,18 @@ export class Move {
         firstMove.next_move.END_MARKER = true;
         firstMove.next_move.prev_move = firstMove;
 
-        if (parent) {
-            firstMove.parent = parent;
-            firstMove.ply = parent.ply;
-            firstMove.varNo = parent.numVars + 1;
-            firstMove.next_move.parent = parent;
-            firstMove.next_move.ply = parent.ply;
-            firstMove.next_move.varNo = parent.numVars + 1;
+        if (parentOrPos instanceof Position) {
+            firstMove.ply = parentOrPos.PlyCount;
+            firstMove.next_move.ply = parentOrPos.PlyCount;
+        }
+
+        if (parentOrPos instanceof Move) {
+            firstMove.parent = parentOrPos;
+            firstMove.ply = parentOrPos.ply;
+            firstMove.varNo = parentOrPos.numVars + 1;
+            firstMove.next_move.parent = parentOrPos;
+            firstMove.next_move.ply = parentOrPos.ply;
+            firstMove.next_move.varNo = parentOrPos.numVars + 1;
         }
 
         return firstMove.next_move;
