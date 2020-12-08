@@ -6,4 +6,5 @@ export interface GameRelatedState {
     game: GameState,
 }
 
+export type GameStore = Store<GameState, GameActions.GameAction>;
 export type GameRelatedStore = Store<GameRelatedState, GameActions.GameAction>;

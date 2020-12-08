@@ -13,6 +13,6 @@ export { Position } from './chess/Position';
 export { Chess } from './chess/Chess';
 
 export { GameState, createGameState } from './actions/GameState';
-export { GameRelatedState, GameRelatedStore } from './actions/GameStore'
+export { GameStore, GameRelatedState, GameRelatedStore } from './actions/GameStore'
 export { GameActions } from './actions/GameActions';
 export { gameReducer } from './actions/GameReducer';
