@@ -1,4 +1,4 @@
-import { Store } from "redux";
+import { AnyAction, Store } from "redux";
 import { GameState } from './GameState';
 import { GameActions } from './GameActions';
 
@@ -7,4 +7,4 @@ export interface GameRelatedState {
 }
 
 export type GameStore = Store<GameState, GameActions.GameAction>;
-export type GameRelatedStore = Store<GameRelatedState, GameActions.GameAction>;
+export type GameRelatedStore = Store<GameRelatedState, AnyAction>;
