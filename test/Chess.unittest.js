@@ -3792,5 +3792,60 @@ describe('Chess', function() {
             expect(game.StartPlyCount).to.equal(7);
             expect(game.CurrentPlyCount).to.equal(9);
         });
+
+        it('test plyToTurn', function() {
+                let turn = Chess.plyToTurn(0);
+                expect(turn).to.equal(0);
+
+                turn = Chess.plyToTurn(1);
+                expect(turn).to.equal(1);
+
+                turn = Chess.plyToTurn(2);
+                expect(turn).to.equal(1);
+
+                turn = Chess.plyToTurn(3);
+                expect(turn).to.equal(2);
+
+                turn = Chess.plyToTurn(4);
+                expect(turn).to.equal(2);
+        });
+
+        it('test plyToColor', function() {
+            let turn = Chess.plyToColor(0);
+            expect(turn).to.equal(0);
+
+            turn = Chess.plyToColor(1);
+            expect(turn).to.equal(0);
+
+            turn = Chess.plyToColor(2);
+            expect(turn).to.equal(1);
+
+            turn = Chess.plyToColor(3);
+            expect(turn).to.equal(0);
+
+            turn = Chess.plyToColor(4);
+            expect(turn).to.equal(1);
+        });
+
+        it('test turnToPly', function() {
+            let turn = Chess.turnToPly(0, 0);
+            expect(turn).to.equal(0);
+
+            turn = Chess.turnToPly(0, 1);
+            expect(turn).to.equal(0);
+
+            turn = Chess.turnToPly(1, 0);
+            expect(turn).to.equal(1);
+
+            turn = Chess.turnToPly(1, 1);
+            expect(turn).to.equal(2);
+
+            turn = Chess.turnToPly(2, 0);
+            expect(turn).to.equal(3);
+
+            turn = Chess.turnToPly(2, 1);
+            expect(turn).to.equal(4);
+        });
+
     });
 });

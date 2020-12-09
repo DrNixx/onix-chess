@@ -654,18 +654,24 @@ export class Chess {
         return "?";
     }
 
-    public static plyToTurn(ply: number, startPly?: number) {
-        startPly = startPly || 0;
-        return toSafeInteger(1 + ((ply + startPly) - 1) / 2);
+    public static plyToTurn(ply: number) {
+        return toSafeInteger(1 + (ply - 1) / 2);
     }
 
-    public static plyToColor(ply: number, startPly?: number) {
-        startPly = startPly || 0;
-        return (((ply + startPly) % 2) == 1) ? Color.White : Color.Black;
+    public static plyToColor(ply: number) {
+        if (ply === 0) {
+            return Color.White;
+        }
+
+        return ((ply % 2) == 1) ? Color.White : Color.Black;
     }
 
     public static turnToPly(turn: number, color?: number) {
+        if (turn === 0) {
+            return 0;
+        }
+
         color = color || Color.White;
-        let ply = (((turn - 1) * 2) + color + 1);
+        return (((turn - 1) * 2) + color + 1);
     }
 }
