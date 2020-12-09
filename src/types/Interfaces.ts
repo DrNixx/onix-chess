@@ -169,8 +169,8 @@ export interface IGameAnalysis {
     state?: string;
     completed?: number;
     by?: string;
-    white: IUserAnalysis;
-    black: IUserAnalysis;
+    white?: IUserAnalysis;
+    black?: IUserAnalysis;
 }
 
 export interface IMovePart {
