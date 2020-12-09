@@ -172,7 +172,7 @@ export class Chess {
     }
 
     public get StartPlyCount() {
-        return (this.startPos) ? this.startPos.PlyCount : 0;
+        return (this.startPos) ? this.startPos.PlyCount : 1;
     }
     
     public Altered: boolean;
