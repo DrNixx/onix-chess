@@ -11,6 +11,7 @@
         "move_no": "Move no",
         "ep_target": "e.p.",
         "castle": "Castle",
+        "startPos": "Starting position",
         "firstMove": "First move",
         "prevMove": " Prev move",
         "nextMove": "Next move",

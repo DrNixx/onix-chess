@@ -11,6 +11,7 @@
         "move_no": "№ хода",
         "ep_target": "e.p.",
         "castle": "Рокировка",
+        "startPos": "Начальная позиция",
         "firstMove": "Первый ход",
         "prevMove": "Предыдущий ход",
         "nextMove": "Следующий ход",

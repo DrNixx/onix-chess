@@ -11,6 +11,7 @@
         "move_no": "Movimiento número",
         "ep_target": "e.p.",
         "castle": "Enroque",
+        "startPos": "Posición inicial",
         "firstMove": "Primer movimiento",
         "prevMove": "Previo movimiento",
         "nextMove": "Próximo movimiento",
