@@ -3711,6 +3711,7 @@ describe('Chess', function() {
             expect(game.startFen).to.equal(fenStdStart);
             
             game.moveLast();
+            expect(game.StartPlyCount).to.equal(1);
             expect(game.CurrentPlyCount).to.equal(0);
         });
 
@@ -3778,18 +3779,24 @@ describe('Chess', function() {
 
         it('test construct with not std start white', function() {
             const game = new Chess(dataWatchNonStdWhite);
+            game.moveBegin();
+            expect(game.StartPlyCount).to.equal(13);
             game.moveFirst();
+            expect(game.StartPlyCount).to.equal(13);
+            expect(game.CurrentPlyCount).to.equal(13);
             game.moveForward();
             var cm = game.CurrentMove;
-            expect(game.StartPlyCount).to.equal(12);
             expect(game.CurrentPlyCount).to.equal(14);
         });
 
         it('test construct with not std start black', function() {
             const game = new Chess(dataWatchNonStdBlack);
+            game.moveBegin();
+            expect(game.StartPlyCount).to.equal(8);
             game.moveFirst();
+            expect(game.StartPlyCount).to.equal(8);
+            expect(game.CurrentPlyCount).to.equal(8);
             game.moveForward();
-            expect(game.StartPlyCount).to.equal(7);
             expect(game.CurrentPlyCount).to.equal(9);
         });
 

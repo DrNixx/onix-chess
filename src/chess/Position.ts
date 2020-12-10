@@ -272,20 +272,10 @@ export class Position {
     }
 
     /**
-     * Get move number
+     * Return current halfmove humber
      */
-    public getMoveNo(): number {
-        return ((this.plyCnt + 2) >> 1);
-    }
-
-    /**
-     * Set move number
-     */
-    public setMoveNo(no: number): void {
-        this.plyCnt = (no - 1) * 2;
-        if (this.wm === Color.Black) {
-            this.plyCnt++;
-        }
+    public set PlyCount(val: number) {
+        this.plyCnt = val;
     }
 
     /**

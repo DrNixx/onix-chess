@@ -7,6 +7,7 @@ import { Position } from './Position';
 import { Square } from './Square';
 import { Color } from './Color';
 import { Castling, CastlingSide, CastlingStr } from './Castling';
+import { turnToPly } from './Common';
 
 // Forsite to piece map
 const fenPieces: Hashtable<Pieces.Piece> = {
@@ -237,7 +238,7 @@ export class FenString {
         
         pos.EpTarget = def.eptarget;
         pos.HalfMoveCount = def.halfMoves;
-        pos.setMoveNo(def.moveNo);
+        pos.PlyCount = turnToPly(def.moveNo, pos.WhoMove) - 1;
 
         return true;
     }

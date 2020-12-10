@@ -1,8 +1,10 @@
 import toSafeInteger from 'lodash-es/toSafeInteger';
+import * as shortid from 'shortid';
 import isNumber from 'lodash-es/isNumber';
 import indexOf from 'lodash-es/indexOf';
 
 import { Hashtable } from 'onix-core';
+import { Squares, Colors } from '../types/Types';
 import { Color } from './Color';
 import { GameResult } from './GameResult';
 import { Piece } from './Piece';
@@ -10,10 +12,9 @@ import { Square } from './Square';
 import { Position, ChessPositionStd, SanCheckLevel, GenerateMode } from './Position';
 import { Move } from './Move';
 import { SimpleMove } from './SimpleMove';
-import { IChessUser, IChessGame, IGameData, IMovePart, ITreePart, IChessPlayer, IChessOpening } from '../types/Interfaces';
+import { IGameData, IMovePart, ITreePart, IChessPlayer, IChessOpening } from '../types/Interfaces';
 import { FenString } from './FenString';
-import { Squares, Colors } from '../types/Types';
-import shortid = require('shortid');
+import { plyToColor, plyToTurn, turnToPly } from './Common';
 
 export enum ChessRatingType {
     None = 0,
@@ -61,7 +62,7 @@ const addTags: string[] = [
 ];
 
 export class ChessTags {
-    private tags: Hashtable<string> = {};
+    private tags: Map<string, string> = new Map<string, string>();
 
     /**
      * constructor
@@ -70,7 +71,7 @@ export class ChessTags {
     }
 
     public clear() {
-        this.tags = { };
+        this.tags.clear();
     }
 
     public add(name: string, value: any) {
@@ -103,7 +104,7 @@ export class ChessTags {
                             break;
                     }
                 } else {
-                    this.tags[name] = value;
+                    this.tags.set(name, value);
                 }
             }
         }
@@ -172,7 +173,7 @@ export class Chess {
     }
 
     public get StartPlyCount() {
-        return (this.startPos) ? this.startPos.PlyCount : 1;
+        return (this.startPos) ? this.startPos.PlyCount + 1 : 1;
     }
     
     public Altered: boolean;
@@ -655,23 +656,14 @@ export class Chess {
     }
 
     public static plyToTurn(ply: number) {
-        return toSafeInteger(1 + (ply - 1) / 2);
+        return plyToTurn(ply);
     }
 
     public static plyToColor(ply: number) {
-        if (ply === 0) {
-            return Color.White;
-        }
-
-        return ((ply % 2) == 1) ? Color.White : Color.Black;
+        return plyToColor(ply);
     }
 
-    public static turnToPly(turn: number, color?: number) {
-        if (turn === 0) {
-            return 0;
-        }
-
-        color = color || Color.White;
-        return (((turn - 1) * 2) + color + 1);
+    public static turnToPly(turn: number, color?: Colors.BW) {
+        return turnToPly(turn, color);
     }
 }
