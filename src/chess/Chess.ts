@@ -637,7 +637,7 @@ export class Chess {
     * Move to last move
     */
     public moveLast() {
-        this.currentMove = this.CurrentMove.Last;
+        this.currentMove = this.CurrentMove.End;
         this.currentPos = new Position(this.currentMove.fen);
     }
 

@@ -3759,7 +3759,13 @@ describe('Chess', function() {
             expect(game.CurrentMove.ply).to.equal(0);
             expect(game.CurrentMove.isBegin()).to.equal(true);
             expect(game.CurrentMove.isFirst()).to.equal(true);
-            
+
+            game.moveLast();
+            game.moveToPly(12);
+            expect(game.CurrentMove.ply).to.equal(12);            
+
+            game.moveToPly(60);
+            expect(game.CurrentMove.ply).to.equal(60);
         });
 
         it('test clock', function() {
