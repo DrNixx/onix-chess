@@ -3,6 +3,7 @@ import { Logger } from 'onix-core';
 import { GameActions as ga } from './GameActions';
 import { GameState, getGameState } from './GameState';
 import { Chess as ChessEngine } from '../chess/Chess';
+import { IGameData } from '../types/Interfaces';
 
 const INITIAL_STATE: GameState = {
     engine: new ChessEngine(),
@@ -78,6 +79,24 @@ export const gameReducer: Reducer<GameState, ga.GameAction> = (state: GameState 
             return {
                 ...state
             };
+        }
+
+        case ga.GAME_LOAD_PARTIAL: {
+            const { engine } = state;
+            const savedPly = engine.CurrentPlyCount;
+
+            const newData: IGameData = {
+                ...engine.RawData,
+                ...action.game
+            }
+
+            const newEngine = new ChessEngine(newData);
+            newEngine.moveToPly(savedPly);
+
+            return {
+                engine: newEngine,
+                ...getGameState(newEngine)
+            }
         }
 
         case ga.GAME_LOAD_FULL: {
