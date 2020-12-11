@@ -572,8 +572,11 @@ export class Chess {
         this.supressEvents = true;
         if (this.moveList[key]) {
             this.currentMove = this.moveList[key];
-            this.currentPos = new Position(this.currentMove.fen);
-            this.currentMove = this.currentMove.Next!;
+            if (!this.currentMove.isBegin()) {
+                this.currentPos = new Position(this.currentMove.Prev.fen);
+            } else {
+                this.currentPos.copyFrom(this.startPos);
+            }
         }
 
         this.supressEvents = false;

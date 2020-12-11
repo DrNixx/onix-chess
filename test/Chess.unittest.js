@@ -3766,6 +3766,12 @@ describe('Chess', function() {
 
             game.moveToPly(60);
             expect(game.CurrentMove.ply).to.equal(60);
+
+            game.moveToKey("3");
+            expect(game.CurrentMove.ply).to.equal(3);
+
+            game.moveToKey("1");
+            expect(game.CurrentMove.ply).to.equal(1);
         });
 
         it('test clock', function() {
