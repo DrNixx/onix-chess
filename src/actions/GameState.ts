@@ -17,7 +17,7 @@ const getLastMove = (move: Move) => {
     let lastMove: cg.Key[]|undefined = undefined;
 
     if (!move.isBegin()) {
-        const { sm } = move.Prev!;
+        const { sm } = move;
         if (sm) {
             lastMove = [<cg.Key>Square.name(sm.from!), <cg.Key>Square.name(sm.to!)];
         }
