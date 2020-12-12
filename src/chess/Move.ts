@@ -4,7 +4,7 @@ import { Piece } from './Piece';
 import { Square } from './Square';
 import { SimpleMove } from './SimpleMove';
 import { Squares, Colors, Pieces } from '../types/Types';
-import { ITreePart, IMovePart } from '../types/Interfaces';
+import { ITreePart, IMovePart, IEval, IJudgment, IGlyph } from '../types/Interfaces';
 import { Position } from './Position';
 
 /**
@@ -173,10 +173,17 @@ export class Move {
      */
     public exitVariation() {
         if (this.parent) {
-            return parent;
+            return this.parent;
         }
 
         return this;
+    }
+
+    /**
+     * Is position inside variation
+     */
+    public inVariation() {
+        return !!this.parent;
     }
 
     public truncate() {

@@ -375,6 +375,10 @@ export class Chess {
                 if (mv.comments && (mv.comments.length > 0)) {
                     sm.comments = mv.comments[0].comment; 
                 }
+
+                sm.eval = mv.eval;
+                sm.judgments = mv.comments;
+                sm.glyphs = mv.glyphs;
             }
             
             const move = this.addMove(sm, sm.san, mv.fen);
@@ -613,6 +617,13 @@ export class Chess {
         }
 
         if (this.currentMove.Prev!.START_MARKER) {
+            if (this.currentMove.inVariation()) {
+                this.currentPos.undoSimpleMove(this.currentMove.sm!);
+                this.currentMove = this.currentMove.exitVariation();
+                this.positionChanged();
+                return true;
+            }
+
             this.currentPos.copyFrom(this.startPos);
         } else {
             this.currentPos.undoSimpleMove(this.currentMove.sm!);
