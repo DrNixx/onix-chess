@@ -314,7 +314,6 @@ export class Chess {
 
         this.currentMove = Move.init(this.startFen, this.startPos);
         this.moveList[this.currentMove.Prev.moveKey] = this.currentMove.Prev;
-        this.moveList[this.currentMove.moveKey] = this.currentMove;
 
         // Set up start
         this.currentPos = new Position();
@@ -533,10 +532,97 @@ export class Chess {
             fen = FenString.fromPosition(currentPos);
         }
         newMove.fen = fen;
+        this.currentMove.fen = fen;
 
         this.positionChanged();
 
         return newMove;
+    }
+
+    public moveToKey(key: string) {
+        this.supressEvents = true;
+        if (this.moveList[key]) {
+            this.currentMove = this.moveList[key];
+            if (!this.currentMove.isBegin()) {
+                this.currentPos = new Position(this.currentMove.Prev.fen);
+            } else {
+                this.currentPos.copyFrom(this.startPos);
+            }
+        }
+
+        this.supressEvents = false;
+    }
+
+    /**
+    * Move to begin game
+    */
+    public moveBegin() {
+        this.currentMove = this.CurrentMove.Begin;
+        this.currentPos.copyFrom(this.startPos);
+        // this.currentPos = new Position(this.currentMove.fen);
+    }
+
+    /**
+    * Move to first move
+    */
+    public moveFirst() {
+        this.currentMove = this.CurrentMove.First;
+        this.currentPos = new Position(this.CurrentMove.fen);
+    }
+
+    /**
+    * Move to last move
+    */
+    public moveLast() {
+        this.currentMove = this.CurrentMove.Last;
+        this.currentPos = new Position(this.currentMove.fen);
+    }
+
+    /**
+    * Move to end position
+    */
+   public moveEnd() {
+    this.currentMove = this.CurrentMove.End;
+    this.currentPos = new Position(this.currentMove.fen);
+}
+
+    /**
+    * Переместить текущую позицию на 1 вперед
+    * @returns Boolean
+    */
+    public moveForward() {
+        if (this.currentMove.END_MARKER) {
+            return false;
+        }
+
+        this.currentMove = this.currentMove.Next!;
+        this.currentPos.doSimpleMove(this.currentMove.sm!);
+        
+        this.positionChanged();
+        
+        return true;
+    }
+
+    /**
+    * Move to 1 turn back
+    * @returns Boolean
+    */
+    public moveBackward() {
+        if (this.currentMove.START_MARKER) {
+            return false;
+        }
+
+        if (this.currentMove.Prev!.START_MARKER) {
+            this.currentPos.copyFrom(this.startPos);
+        } else {
+            this.currentPos.undoSimpleMove(this.currentMove.sm!);
+        }
+
+        this.currentMove = this.currentMove.Prev!;
+        
+        this.positionChanged();
+
+        return true;
     }
 
     /**
@@ -566,82 +652,6 @@ export class Chess {
         }
 
         this.supressEvents = false;
-    }
-
-    public moveToKey(key: string) {
-        this.supressEvents = true;
-        if (this.moveList[key]) {
-            this.currentMove = this.moveList[key];
-            if (!this.currentMove.isBegin()) {
-                this.currentPos = new Position(this.currentMove.Prev.fen);
-            } else {
-                this.currentPos.copyFrom(this.startPos);
-            }
-        }
-
-        this.supressEvents = false;
-    }
-
-    /**
-    * Переместить текущую позицию на 1 вперед
-    * @returns Boolean
-    */
-    public moveForward() {
-        if (this.currentMove.END_MARKER) {
-            return false;
-        }
-
-        this.currentPos.doSimpleMove(this.currentMove.sm!);
-        this.currentMove = this.currentMove.Next!;
-        this.positionChanged();
-        
-        return true;
-    }
-
-    /**
-    * Move to 1 turn back
-    * @returns Boolean
-    */
-    public moveBackward() {
-        if (this.currentMove.START_MARKER) {
-            return false;
-        }
-
-        this.currentMove = this.currentMove.Prev!;
-        if (this.currentMove.START_MARKER) {
-            this.currentPos.copyFrom(this.startPos);
-        } else {
-            this.currentPos.undoSimpleMove(this.currentMove.sm!);
-        }
-        
-        this.positionChanged();
-
-        return true;
-    }
-
-    /**
-    * Move to begin game
-    */
-   public moveBegin() {
-    this.currentMove = this.CurrentMove.Begin;
-    this.currentPos.copyFrom(this.startPos);
-    // this.currentPos = new Position(this.currentMove.fen);
-}
-
-    /**
-    * Move to first move
-    */
-    public moveFirst() {
-        this.currentMove = this.CurrentMove.First;
-        this.currentPos = new Position(this.CurrentMove.Prev.fen);
-    }
-
-    /**
-    * Move to last move
-    */
-    public moveLast() {
-        this.currentMove = this.CurrentMove.End;
-        this.currentPos = new Position(this.currentMove.fen);
     }
 
     public getResultName(mode: 'char' | 'short' | 'long' | 'html'): string {

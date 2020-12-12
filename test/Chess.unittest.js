@@ -3728,6 +3728,11 @@ describe('Chess', function() {
             expect(game.CurrentMove.isBegin()).to.equal(true);
             expect(game.CurrentMove.isFirst()).to.equal(true);
             expect(game.CurrentMove.ply).to.equal(0);
+            
+            game.moveForward();
+            expect(game.CurrentMove.isBegin()).to.equal(false);
+            expect(game.CurrentMove.isFirst()).to.equal(true);
+            expect(game.CurrentMove.ply).to.equal(1);
 
             game.moveFirst();
             expect(game.CurrentMove.isBegin()).to.equal(false);
