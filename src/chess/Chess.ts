@@ -15,7 +15,6 @@ import { IGameData, IMovePart, ITreePart, IChessPlayer, IChessOpening, IGameAnal
 import { FenString } from './FenString';
 import { plyToColor, plyToTurn, turnToPly } from './Common';
 import { EvalItem } from '../analysis/EvalItem';
-import { setMaxListeners } from 'process';
 
 export enum ChessRatingType {
     None = 0,
@@ -156,7 +155,7 @@ export class Chess {
     private pgnNextMovePos: number;
     private varDepth: number = 0;
     private supressEvents = false;
-    private moveList: { [index: string]: Move } = {};
+    private moveList: Map<string, Move> = new Map<string, Move>();
     
     private currentMove!: Move;
     private curPos!: Position;
@@ -307,7 +306,7 @@ export class Chess {
     /// clear all moves.
     /// </summary>
     private clearMoves () {
-        this.moveList = {};
+        this.moveList.clear();
         this.InPromotion = false;
         this.NoQueenPromotion = false;
 
@@ -316,7 +315,7 @@ export class Chess {
         this.savedPos = null;
 
         this.currentMove = Move.init(this.startFen, this.startPos);
-        this.moveList[this.currentMove.Prev.moveKey] = this.currentMove.Prev;
+        this.moveList.set(this.currentMove.Prev.moveKey, this.currentMove.Prev);
 
         // Set up start
         this.curPos = new Position();
@@ -448,8 +447,7 @@ export class Chess {
             
             const move = this.addMove(sm, sm.san, mv.fen);
             move.id = mv.id || shortid.generate();
-            move.data = mv;
-            this.moveList[move.moveKey] = move;
+            this.moveList.set(move.moveKey, move);
         }
     }
 
@@ -609,8 +607,8 @@ export class Chess {
     }
 
     public moveToKey(key: string) {
-        if (this.moveList[key]) {
-            const targetMove = this.moveList[key];
+        const targetMove = this.moveList.get(key);
+        if (targetMove) {
             if (!targetMove.inVariation()) {
                 this.moveToPly(targetMove.PlyCount);
             } else {
@@ -737,6 +735,29 @@ export class Chess {
         }
 
         this.supressEvents = false;
+    }
+
+    public findNextMistake(color: Colors.BW, ply: number, type: "blunder" | "mistake" | "inaccuracy"): number | undefined {
+        if (!this.currentMove.inVariation()) {
+            const judgments = Array.from(this.moveList.values()).filter((value) => {
+                const sm = value.sm;
+                return ((sm.color === color) && (sm.judgments) && (sm.judgments.length) && (type === sm.judgments[0].name.toLowerCase()));
+            });
+
+            if (judgments.length > 0) {
+                const right = judgments.filter((value) => { return value.sm.ply > ply});
+                if (right.length > 0) {
+                    return right[0].PlyCount;
+                }
+
+                const left = judgments.filter((value) => { return value.sm.ply < ply});
+                if (left.length > 0) {
+                    return left[0].PlyCount;
+                }
+            }
+        }
+        
+        return undefined;
     }
 
     public getResultName(mode: 'char' | 'short' | 'long' | 'html'): string {

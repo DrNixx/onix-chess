@@ -29,8 +29,7 @@ export class Move {
     public comments: string;
     public fen: string;
 
-    public sm: SimpleMove | null;
-    public data?: ITreePart | IMovePart;
+    public sm: SimpleMove;
 
     /**
      * @constructor
@@ -40,7 +39,7 @@ export class Move {
         this.uid = shortid.generate();
         this.name = "";
         this.fen = "";
-        this.sm = null;
+        this.sm = new SimpleMove();
         this.whoMove = Color.White;
         this.ply = 0;
         this.comments = "";
@@ -54,15 +53,11 @@ export class Move {
         const firstMove = new Move();
         firstMove.name = "FirstMove";
         firstMove.fen = fen;
-        firstMove.ply = 0;
-        firstMove.sm = new SimpleMove();
         firstMove.START_MARKER = true;
         firstMove.END_MARKER = false;
 
         firstMove.next_move = new Move();
         firstMove.next_move.name = "LastMove";
-        firstMove.next_move.ply = 0;
-        firstMove.next_move.sm = new SimpleMove();
         firstMove.next_move.START_MARKER = false;
         firstMove.next_move.END_MARKER = true;
         firstMove.next_move.prev_move = firstMove;
