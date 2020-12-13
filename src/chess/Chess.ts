@@ -3,7 +3,6 @@ import * as shortid from 'shortid';
 import isNumber from 'lodash-es/isNumber';
 import indexOf from 'lodash-es/indexOf';
 
-import { Hashtable } from 'onix-core';
 import { Squares, Colors } from '../types/Types';
 import { Color } from './Color';
 import { GameResult } from './GameResult';
@@ -12,9 +11,11 @@ import { Square } from './Square';
 import { Position, ChessPositionStd, SanCheckLevel, GenerateMode } from './Position';
 import { Move } from './Move';
 import { SimpleMove } from './SimpleMove';
-import { IGameData, IMovePart, ITreePart, IChessPlayer, IChessOpening } from '../types/Interfaces';
+import { IGameData, IMovePart, ITreePart, IChessPlayer, IChessOpening, IGameAnalysis } from '../types/Interfaces';
 import { FenString } from './FenString';
 import { plyToColor, plyToTurn, turnToPly } from './Common';
+import { EvalItem } from '../analysis/EvalItem';
+import { setMaxListeners } from 'process';
 
 export enum ChessRatingType {
     None = 0,
@@ -156,26 +157,12 @@ export class Chess {
     private varDepth: number = 0;
     private supressEvents = false;
     private moveList: { [index: string]: Move } = {};
+    
     private currentMove!: Move;
-    private currentPos!: Position;
+    private curPos!: Position;
     private startPos: Position;
     private startFen: string = FenString.standartStart;
 
-    /**
-     * Side to move in starting position
-     */
-    public get ToMove() {
-        return this.CurrentPos.WhoMove;
-    }
-
-    public get CurrentPlyCount() {
-        return this.CurrentMove.PlyCount;
-    }
-
-    public get StartPlyCount() {
-        return (this.startPos) ? this.startPos.PlyCount + 1 : 1;
-    }
-    
     public Altered: boolean;
     public InPromotion: boolean = false;
 
@@ -206,12 +193,24 @@ export class Chess {
         return this.data;
     }
 
+    public get ToMove() {
+        return this.CurrentPos.WhoMove;
+    }
+
+    public get CurrentPlyCount() {
+        return this.CurrentMove.PlyCount;
+    }
+
+    public get StartPlyCount() {
+        return (this.startPos) ? this.startPos.PlyCount + 1 : 1;
+    }
+
     public get CurrentMove(): Move {
         return this.currentMove;
     }
 
     public get CurrentPos(): Position {
-        return this.currentPos;
+        return this.curPos;
     }
 
     public set StartFen(value: string) {
@@ -222,6 +221,8 @@ export class Chess {
         return this.startFen !== FenString.standartStart;
     }
 
+    public anatysis: IGameAnalysis = {};
+    
     /**
      * @constructor 
      */
@@ -252,6 +253,8 @@ export class Chess {
         // CommentsFlag = NagsFlag = VarsFlag = 0;
         this.InPromotion = false;
         this.NoQueenPromotion = false;
+
+        this.anatysis = {};
 
         this.clearStandardTags();
         this.clearExtraTags();
@@ -316,12 +319,12 @@ export class Chess {
         this.moveList[this.currentMove.Prev.moveKey] = this.currentMove.Prev;
 
         // Set up start
-        this.currentPos = new Position();
-        this.currentPos.copyFrom(this.startPos);
+        this.curPos = new Position();
+        this.curPos.copyFrom(this.startPos);
     }
 
     public init() {
-        const { game, player, opponent, steps, treeParts } = this.data;
+        const { game, player, opponent, analysis, steps, treeParts } = this.data;
         if (game) {
             this.GameId = game.id;
             this.Event = game.event;
@@ -338,10 +341,68 @@ export class Chess {
         this.assignPlayer(player);
         this.assignPlayer(opponent);
 
+        if (analysis) {
+            this.anatysis.state = analysis.state ?? "empty";
+            if ((this.anatysis.state == "inprogress") && (analysis.completed)) {
+                this.anatysis.completed = analysis.completed;
+            }
+
+            if (analysis.white) {
+                this.anatysis.white = {
+                    blunder: toSafeInteger(analysis.white.blunder),
+                    mistake: toSafeInteger(analysis.white.mistake),
+                    inaccuracy: toSafeInteger(analysis.white.inaccuracy),
+                    acpl: toSafeInteger(analysis.white.acpl)
+                }
+            }
+
+            if (analysis.black) {
+                this.anatysis.black = {
+                    blunder: toSafeInteger(analysis.black.blunder),
+                    mistake: toSafeInteger(analysis.black.mistake),
+                    inaccuracy: toSafeInteger(analysis.black.inaccuracy),
+                    acpl: toSafeInteger(analysis.black.acpl)
+                }
+            }
+        }
+
         const moves = treeParts ?? steps;
         if (moves) {
             this.supressEvents = true;
             this.decodeMoves(moves);
+            if (treeParts) {
+                let move = this.CurrentMove.Begin;
+                while (!move.END_MARKER) {
+                    if (!move.START_MARKER && move.sm?.eval && move.Prev.sm?.eval) {
+                        move.sm.eval.normalize(move.Prev.sm!.eval!)
+                    }
+
+                    move = move.Next;
+                };
+
+                move = this.CurrentMove.Begin;
+                while (!move.END_MARKER) {
+                    if (!move.isLast() && move.sm?.eval && move.Next.sm?.eval) {
+                        move.sm!.eval!.extend(move.Next.sm!.eval!)
+                    }
+
+                    move = move.Next;
+                };
+            }
+
+            if (game?.moveCentis) {
+                const times = (<number[]>[]).concat(game?.moveCentis);
+                let move = this.CurrentMove.First;
+                while (!move.END_MARKER && times.length) {
+                    const time = times.shift();
+                    if (move.sm) {
+                        move.sm.time = toSafeInteger(time);
+                    }
+
+                    move = move.Next;
+                };
+            }
+
             this.supressEvents = false;
         }
     }
@@ -362,21 +423,25 @@ export class Chess {
 
     public decodeMove(mv: IMovePart|ITreePart) {
         if (mv.uci === undefined) {
+            if (this.isInstanceOfTreePart(mv)) {
+                const move = this.CurrentMove.First;
+                if (move && move.sm) {
+                    move.sm.eval = new EvalItem(mv.eval);
+                    move.sm.judgments = mv.comments;
+                    move.sm.glyphs = mv.glyphs;
+                }
+            }
             return;
         }
 
-        const sm = this.currentPos.readCoordMove(mv.uci);
+        const sm = this.curPos.readCoordMove(mv.uci);
         if (sm !== null) {
             sm.ply = this.CurrentPos.PlyCount + 1;
             sm.permanent = true;
             sm.san = mv.san;
             sm.color = this.CurrentPos.WhoMove;
             if (this.isInstanceOfTreePart(mv)) {
-                if (mv.comments && (mv.comments.length > 0)) {
-                    sm.comments = mv.comments[0].comment; 
-                }
-
-                sm.eval = mv.eval;
+                sm.eval = new EvalItem(mv.eval);
                 sm.judgments = mv.comments;
                 sm.glyphs = mv.glyphs;
             }
@@ -399,7 +464,7 @@ export class Chess {
     private positionChanged() {
         if (!this.supressEvents) {
             if (!this.currentMove.fen) {
-                this.currentMove.fen = FenString.fromPosition(this.currentPos);
+                this.currentMove.fen = FenString.fromPosition(this.curPos);
             }
 
             this.Fen = this.currentMove.fen;
@@ -409,41 +474,41 @@ export class Chess {
     public checkGameState(): ChessGameState {
         const state = new ChessGameState();
 
-        const mlist = this.currentPos.generateMoves(Piece.None, GenerateMode.All, true);
+        const mlist = this.curPos.generateMoves(Piece.None, GenerateMode.All, true);
 
         if (mlist.length === 0) {
-            if (this.currentPos.isKingInCheck()) {
+            if (this.curPos.isKingInCheck()) {
                 state.InCheckMate = true;
             } else {
                 state.InStaleMate = true;
             }
         }
 
-        if ((!this.currentPos.hasPiece(Piece.WPawn)) &&
-            (!this.currentPos.hasPiece(Piece.WQueen)) &&
-            (!this.currentPos.hasPiece(Piece.WRook))) {
-            if ((!this.currentPos.hasPiece(Piece.WKnight)) && (!this.currentPos.hasPiece(Piece.WBishop))) {
+        if ((!this.curPos.hasPiece(Piece.WPawn)) &&
+            (!this.curPos.hasPiece(Piece.WQueen)) &&
+            (!this.curPos.hasPiece(Piece.WRook))) {
+            if ((!this.curPos.hasPiece(Piece.WKnight)) && (!this.curPos.hasPiece(Piece.WBishop))) {
                 // King only
                 state.IsNoMaterialWhite = true;
-            } else if ((!this.currentPos.hasPiece(Piece.WKnight)) && (this.currentPos.getPieceCount(Piece.WBishop) === 1)) {
+            } else if ((!this.curPos.hasPiece(Piece.WKnight)) && (this.curPos.getPieceCount(Piece.WBishop) === 1)) {
                 // King and bishop
                 state.IsNoMaterialWhite = true;
-            } else if ((this.currentPos.getPieceCount(Piece.WKnight) === 1) && (!this.currentPos.hasPiece(Piece.WBishop))) {
+            } else if ((this.curPos.getPieceCount(Piece.WKnight) === 1) && (!this.curPos.hasPiece(Piece.WBishop))) {
                 // King and knight
                 state.IsNoMaterialWhite = true;
             }
         }
 
-        if ((!this.currentPos.hasPiece(Piece.BPawn)) &&
-            (!this.currentPos.hasPiece(Piece.BQueen)) &&
-            (!this.currentPos.hasPiece(Piece.BRook))) {
-            if ((!this.currentPos.hasPiece(Piece.BKnight)) && (!this.currentPos.hasPiece(Piece.BBishop))) {
+        if ((!this.curPos.hasPiece(Piece.BPawn)) &&
+            (!this.curPos.hasPiece(Piece.BQueen)) &&
+            (!this.curPos.hasPiece(Piece.BRook))) {
+            if ((!this.curPos.hasPiece(Piece.BKnight)) && (!this.curPos.hasPiece(Piece.BBishop))) {
                 // King only
                 state.IsNoMaterialBlack = true;
-            } else if ((!this.currentPos.hasPiece(Piece.BKnight)) && (this.currentPos.getPieceCount(Piece.BBishop) === 1)) {
+            } else if ((!this.curPos.hasPiece(Piece.BKnight)) && (this.curPos.getPieceCount(Piece.BBishop) === 1)) {
                 // King and bishop
                 state.IsNoMaterialBlack = true;
-            } else if ((this.currentPos.getPieceCount(Piece.BKnight) === 1) && (!this.currentPos.hasPiece(Piece.BBishop))) {
+            } else if ((this.curPos.getPieceCount(Piece.BKnight) === 1) && (!this.curPos.hasPiece(Piece.BBishop))) {
                 // King and knight
                 state.IsNoMaterialBlack = true;
             }
@@ -459,13 +524,13 @@ export class Chess {
         }
 
         state.IsPosRepeation = rc >= 3;
-        state.Is50MovesRule = this.currentPos.HalfMoveCount > 100;
+        state.Is50MovesRule = this.curPos.HalfMoveCount > 100;
 
         return state;
     }
 
     public makeMove(fr: Squares.Square, to: Squares.Square, promote?: string) {
-        const { currentPos } = this;
+        const { curPos: currentPos } = this;
         const sm = new SimpleMove();
         sm.pieceNum = currentPos.getPieceNum(fr);
         sm.movingPiece = currentPos.getPiece(fr);
@@ -500,7 +565,7 @@ export class Chess {
         // Handle en passant capture:
         if (ptype == Piece.Pawn && (sm.capturedPiece == Piece.None) && (Square.fyle(fr) != Square.fyle(to))) {
             const enemyPawn = Piece.create(enemy, Piece.Pawn);
-            sm.capturedSquare = (this.currentPos.WhoMove === Color.White ? (to - 8) as Squares.Square : (to + 8) as Squares.Square);
+            sm.capturedSquare = (this.curPos.WhoMove === Color.White ? (to - 8) as Squares.Square : (to + 8) as Squares.Square);
             sm.capturedPiece = enemyPawn;
         }
 
@@ -513,7 +578,7 @@ export class Chess {
     * @param san String
     */
     public addMove(sm: SimpleMove, san?: string, fen?: string) {
-        const { currentPos } = this;
+        const { curPos: currentPos } = this;
 
         // We must be at the end of a game/variation to add a move:
         if (!this.currentMove.END_MARKER) {
@@ -523,7 +588,7 @@ export class Chess {
 
         if (!sm.san) {
             if (!san || (san == undefined)) {
-                sm.san = this.currentPos.makeSanString(sm, SanCheckLevel.MateTest);
+                sm.san = this.curPos.makeSanString(sm, SanCheckLevel.MateTest);
             } else {
                 sm.san = san;
             }
@@ -531,7 +596,7 @@ export class Chess {
 
         const newMove = this.currentMove.append(sm);
 
-        this.currentPos.doSimpleMove(sm);
+        this.curPos.doSimpleMove(sm);
         if (!fen) {
             fen = FenString.fromPosition(currentPos);
         }
@@ -554,9 +619,9 @@ export class Chess {
                 
                 this.currentMove = targetMove;
                 if (!this.currentMove.isBegin()) {
-                    this.currentPos = new Position(this.currentMove.Prev.fen);
+                    this.curPos = new Position(this.currentMove.Prev.fen);
                 } else {
-                    this.currentPos.copyFrom(this.startPos);
+                    this.curPos.copyFrom(this.startPos);
                 }
 
                 this.supressEvents = false;
@@ -570,7 +635,7 @@ export class Chess {
     */
     public moveBegin() {
         this.currentMove = this.CurrentMove.Begin;
-        this.currentPos.copyFrom(this.startPos);
+        this.curPos.copyFrom(this.startPos);
         // this.currentPos = new Position(this.currentMove.fen);
     }
 
@@ -608,7 +673,7 @@ export class Chess {
 
         this.currentMove = this.currentMove.Next!;
         if (!this.currentMove.END_MARKER) {
-            this.currentPos.doSimpleMove(this.currentMove.sm!);
+            this.curPos.doSimpleMove(this.currentMove.sm!);
         }
         
         this.positionChanged();
@@ -627,15 +692,15 @@ export class Chess {
 
         if (this.currentMove.Prev.START_MARKER) {
             if (this.currentMove.inVariation()) {
-                this.currentPos.undoSimpleMove(this.currentMove.sm!);
+                this.curPos.undoSimpleMove(this.currentMove.sm!);
                 this.currentMove = this.currentMove.exitVariation();
                 this.positionChanged();
                 return true;
             }
 
-            this.currentPos.copyFrom(this.startPos);
+            this.curPos.copyFrom(this.startPos);
         } else if (!this.currentMove.END_MARKER) {
-            this.currentPos.undoSimpleMove(this.currentMove.sm!);
+            this.curPos.undoSimpleMove(this.currentMove.sm!);
         }
 
         this.currentMove = this.currentMove.Prev;

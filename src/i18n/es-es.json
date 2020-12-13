@@ -15,6 +15,7 @@
         "firstMove": "Primer movimiento",
         "prevMove": "Previo movimiento",
         "nextMove": "Próximo movimiento",
-        "lastMove": "Último movimiento"
+        "lastMove": "Último movimiento",
+        "mateIn": "Mate está a #%d"
     }
 }

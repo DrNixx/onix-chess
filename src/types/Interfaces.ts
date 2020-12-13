@@ -39,13 +39,14 @@ export type IChessPerfs = {
     [name in PerfNameType]?: IChessPref;
 }
 
+export type AnalyseStatus = "empty" | "unanalysed" | "inprogress" | "ready";
+
 export interface IChessOpening {
     code: string;
     name?: string;
     fen?: string
 }
 
- 
 export interface IChessGame {
     id: number | string;
     load: boolean;
@@ -166,7 +167,7 @@ export interface IUserAnalysis {
 }
 
 export interface IGameAnalysis {
-    state?: string;
+    state?: AnalyseStatus;
     completed?: number;
     by?: string;
     white?: IUserAnalysis;

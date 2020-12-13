@@ -55,12 +55,14 @@ export class Move {
         firstMove.name = "FirstMove";
         firstMove.fen = fen;
         firstMove.ply = 0;
+        firstMove.sm = new SimpleMove();
         firstMove.START_MARKER = true;
         firstMove.END_MARKER = false;
 
         firstMove.next_move = new Move();
         firstMove.next_move.name = "LastMove";
         firstMove.next_move.ply = 0;
+        firstMove.next_move.sm = new SimpleMove();
         firstMove.next_move.START_MARKER = false;
         firstMove.next_move.END_MARKER = true;
         firstMove.next_move.prev_move = firstMove;

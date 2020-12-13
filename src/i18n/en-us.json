@@ -15,6 +15,7 @@
         "firstMove": "First move",
         "prevMove": " Prev move",
         "nextMove": "Next move",
-        "lastMove": "Last move"
+        "lastMove": "Last move",
+        "mateIn": "Mate in #%d"
     }
 }

@@ -1,5 +1,6 @@
 import { IEval, IGlyph, IJudgment } from '../types/Interfaces';
 import { Colors, Pieces, Squares } from '../types/Types';
+import { EvalItem } from '../analysis/EvalItem'
 import { Color } from './Color';
 import { Piece } from './Piece';
 import { Square } from './Square';
@@ -26,8 +27,9 @@ export class SimpleMove {
 
     public ply = 0;
     public san?: string;
+    public time: number = 0;
     public comments?: string;
-    public eval?: IEval;
+    public eval?: EvalItem;
     public judgments?: IJudgment[];
     public glyphs?: IGlyph[];
     
