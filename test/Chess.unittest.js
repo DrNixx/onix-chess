@@ -3765,7 +3765,19 @@ describe('Chess', function() {
             expect(game.CurrentMove.isBegin()).to.equal(true);
             expect(game.CurrentMove.isFirst()).to.equal(true);
 
+            game.moveEnd();
+            expect(game.CurrentMove.isEnd()).to.equal(true);
+            expect(game.CurrentMove.isLast()).to.equal(true);
+
+            game.moveBackward();
+            expect(game.CurrentMove.isEnd()).to.equal(false);
+            expect(game.CurrentMove.isLast()).to.equal(true);
+
+            game.moveBegin();
             game.moveLast();
+            expect(game.CurrentMove.isEnd()).to.equal(false);
+            expect(game.CurrentMove.isLast()).to.equal(true);
+
             game.moveToPly(12);
             expect(game.CurrentMove.ply).to.equal(12);            
 

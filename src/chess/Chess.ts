@@ -449,7 +449,7 @@ export class Chess {
             }
         }
 
-        const move = this.currentMove.Prev!;
+        const move = this.currentMove.Prev;
         const thisFen = move.fen;
         let rc = 1;
         while (!move.START_MARKER) {
@@ -570,24 +570,23 @@ export class Chess {
     * Move to first move
     */
     public moveFirst() {
-        this.currentMove = this.CurrentMove.First;
-        this.currentPos = new Position(this.CurrentMove.fen);
+        this.moveBegin();
+        this.moveForward();
     }
 
     /**
     * Move to last move
     */
     public moveLast() {
-        this.currentMove = this.CurrentMove.Last;
-        this.currentPos = new Position(this.currentMove.fen);
+        this.moveEnd();
+        this.moveBackward();
     }
 
     /**
     * Move to end position
     */
    public moveEnd() {
-    this.currentMove = this.CurrentMove.End;
-    this.currentPos = new Position(this.currentMove.fen);
+    this.moveToPly(9999);
 }
 
     /**
@@ -600,7 +599,9 @@ export class Chess {
         }
 
         this.currentMove = this.currentMove.Next!;
-        this.currentPos.doSimpleMove(this.currentMove.sm!);
+        if (!this.currentMove.END_MARKER) {
+            this.currentPos.doSimpleMove(this.currentMove.sm!);
+        }
         
         this.positionChanged();
         
@@ -616,7 +617,7 @@ export class Chess {
             return false;
         }
 
-        if (this.currentMove.Prev!.START_MARKER) {
+        if (this.currentMove.Prev.START_MARKER) {
             if (this.currentMove.inVariation()) {
                 this.currentPos.undoSimpleMove(this.currentMove.sm!);
                 this.currentMove = this.currentMove.exitVariation();
@@ -625,11 +626,11 @@ export class Chess {
             }
 
             this.currentPos.copyFrom(this.startPos);
-        } else {
+        } else if (!this.currentMove.END_MARKER) {
             this.currentPos.undoSimpleMove(this.currentMove.sm!);
         }
 
-        this.currentMove = this.currentMove.Prev!;
+        this.currentMove = this.currentMove.Prev;
         
         this.positionChanged();
 
