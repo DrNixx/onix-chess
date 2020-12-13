@@ -544,17 +544,25 @@ export class Chess {
     }
 
     public moveToKey(key: string) {
-        this.supressEvents = true;
         if (this.moveList[key]) {
-            this.currentMove = this.moveList[key];
-            if (!this.currentMove.isBegin()) {
-                this.currentPos = new Position(this.currentMove.Prev.fen);
+            const targetMove = this.moveList[key];
+            if (!targetMove.inVariation()) {
+                this.moveToPly(targetMove.PlyCount);
             } else {
-                this.currentPos.copyFrom(this.startPos);
+                // TODO: Move in variation
+                this.supressEvents = true;
+                
+                this.currentMove = targetMove;
+                if (!this.currentMove.isBegin()) {
+                    this.currentPos = new Position(this.currentMove.Prev.fen);
+                } else {
+                    this.currentPos.copyFrom(this.startPos);
+                }
+
+                this.supressEvents = false;
+                this.positionChanged();
             }
         }
-
-        this.supressEvents = false;
     }
 
     /**
