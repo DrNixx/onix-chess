@@ -423,7 +423,7 @@ export class Chess {
     public decodeMove(mv: IMovePart|ITreePart) {
         if (mv.uci === undefined) {
             if (this.isInstanceOfTreePart(mv)) {
-                const move = this.CurrentMove.First;
+                const move = this.CurrentMove.Begin;
                 if (move && move.sm) {
                     move.sm.eval = new EvalItem(mv.eval);
                     move.sm.judgments = mv.comments;
