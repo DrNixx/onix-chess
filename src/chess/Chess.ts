@@ -220,7 +220,7 @@ export class Chess {
         return this.startFen !== FenString.standartStart;
     }
 
-    public anatysis: IGameAnalysis = {};
+    public Analysis: IGameAnalysis = {};
     
     /**
      * @constructor 
@@ -253,7 +253,7 @@ export class Chess {
         this.InPromotion = false;
         this.NoQueenPromotion = false;
 
-        this.anatysis = {};
+        this.Analysis = {};
 
         this.clearStandardTags();
         this.clearExtraTags();
@@ -341,13 +341,13 @@ export class Chess {
         this.assignPlayer(opponent);
 
         if (analysis) {
-            this.anatysis.state = analysis.state ?? "empty";
-            if ((this.anatysis.state == "inprogress") && (analysis.completed)) {
-                this.anatysis.completed = analysis.completed;
+            this.Analysis.state = analysis.state ?? "empty";
+            if ((this.Analysis.state == "inprogress") && (analysis.completed)) {
+                this.Analysis.completed = analysis.completed;
             }
 
             if (analysis.white) {
-                this.anatysis.white = {
+                this.Analysis.white = {
                     blunder: toSafeInteger(analysis.white.blunder),
                     mistake: toSafeInteger(analysis.white.mistake),
                     inaccuracy: toSafeInteger(analysis.white.inaccuracy),
@@ -356,7 +356,7 @@ export class Chess {
             }
 
             if (analysis.black) {
-                this.anatysis.black = {
+                this.Analysis.black = {
                     blunder: toSafeInteger(analysis.black.blunder),
                     mistake: toSafeInteger(analysis.black.mistake),
                     inaccuracy: toSafeInteger(analysis.black.inaccuracy),
