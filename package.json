@@ -26,7 +26,7 @@
   "dependencies": {
     "chessground": "^7.9.3",
     "lodash-es": "^4.17.15",
-    "onix-core": "^4.2.1",
+    "onix-core": "^4.2.2",
     "redux": "^4.0.5",
     "shortid": "^2.2.16",
     "warning": "^4.0.3"

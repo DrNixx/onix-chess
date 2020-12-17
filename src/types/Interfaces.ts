@@ -30,6 +30,7 @@ export interface IGameStatus {
     name: StatusName;
     result?: number;
     result_name?: string;
+    subtype?: number;
 }
 
 export type PerfNameType = 
