@@ -83,6 +83,7 @@ export interface ITournamentRanks {
 
 export interface IChessTournament {
     id: number;
+    round?: number;
     name: string;
     running: boolean;
     berserkable?: boolean;
