@@ -1,5 +1,5 @@
-import repeat from 'lodash-es/repeat';
-import toSafeInteger from 'lodash-es/toSafeInteger';
+import repeat from 'lodash/repeat';
+import toSafeInteger from 'lodash/toSafeInteger';
 import { Hashtable } from 'onix-core/dist/Hashtable';
 import { Colors, Squares, Pieces } from '../types/Types';
 import { Piece } from './Piece';

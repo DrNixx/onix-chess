@@ -1,5 +1,5 @@
-import cloneDeep from 'lodash-es/cloneDeep';
-import indexOf from 'lodash-es/indexOf';
+import cloneDeep from 'lodash/cloneDeep';
+import indexOf from 'lodash/indexOf';
 import { Colors, Pieces, Squares, Directions } from '../types/Types';
 import { Color } from './Color';
 import { Castling, CastlingSide } from './Castling';

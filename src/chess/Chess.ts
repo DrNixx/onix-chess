@@ -1,7 +1,7 @@
-import toSafeInteger from 'lodash-es/toSafeInteger';
+import toSafeInteger from 'lodash/toSafeInteger';
 import * as shortid from 'shortid';
-import isNumber from 'lodash-es/isNumber';
-import indexOf from 'lodash-es/indexOf';
+import isNumber from 'lodash/isNumber';
+import indexOf from 'lodash/indexOf';
 
 import { Squares, Colors } from '../types/Types';
 import { Color } from './Color';

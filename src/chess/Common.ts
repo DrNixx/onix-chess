@@ -1,4 +1,4 @@
-import toSafeInteger from "lodash-es/toSafeInteger";
+import toSafeInteger from "lodash/toSafeInteger";
 import { Colors } from "../types/Types";
 import { Color } from './Color';
 
