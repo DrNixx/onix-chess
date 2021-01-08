@@ -1,6 +1,6 @@
 {
   "name": "onix-chess",
-  "version": "7.2.2",
+  "version": "7.2.3",
   "description": "Onix chess library",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
